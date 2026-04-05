@@ -15,6 +15,9 @@ firebase.initializeApp(firebaseConfig);
 // Initialisation de Firestore
 const db = firebase.firestore();
 
+// Initialisation de Firebase Storage
+const storage = firebase.storage();
+
 // Initialisation d'Analytics (optionnel)
 if (typeof firebase.analytics === "function") {
     firebase.analytics();
