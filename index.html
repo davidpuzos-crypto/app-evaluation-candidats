@@ -5,12 +5,35 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Évaluation Candidats - Soft Skills</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons pour les étoiles et icônes -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lucide-static@latest/font/lucide.min.css">
     <style>
         body { font-family: 'Inter', system-ui, sans-serif; }
-        .skill-btn { transition: all 0.2s ease; }
-        .skill-btn:hover { transform: translateY(-1px); }
-        .skill-btn.active { ring: 2px; }
-        .score-badge { min-width: 2rem; }
+
+        /* Étoiles de notation */
+        .star-rating { display: flex; gap: 4px; }
+        .star {
+            width: 28px; height: 28px;
+            cursor: pointer;
+            transition: transform 0.15s ease, color 0.15s ease;
+        }
+        .star:hover { transform: scale(1.2); }
+        .star.filled { color: #f59e0b; }
+        .star.empty  { color: #d1d5db; }
+
+        /* Upload CV */
+        .cv-upload-zone {
+            border: 2px dashed #cbd5e1;
+            transition: border-color 0.2s, background-color 0.2s;
+        }
+        .cv-upload-zone:hover,
+        .cv-upload-zone.dragover {
+            border-color: #6366f1;
+            background-color: #eef2ff;
+        }
+
+        /* Progress bar */
+        .upload-progress { transition: width 0.3s ease; }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
@@ -18,20 +41,26 @@
     <!-- Header -->
     <header class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg">
         <div class="max-w-4xl mx-auto px-6 py-8">
-            <h1 class="text-3xl font-bold">Évaluation des Candidats</h1>
+            <h1 class="text-3xl font-bold flex items-center gap-3">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                Évaluation des Candidats
+            </h1>
             <p class="mt-2 text-indigo-100">Recrutement basé sur les Soft Skills</p>
         </div>
     </header>
 
     <main class="max-w-4xl mx-auto px-6 py-10 space-y-10">
 
-        <!-- Section 1 : Inscription Candidat -->
+        <!-- ============================================ -->
+        <!-- Section 1 : Inscription Candidat             -->
+        <!-- ============================================ -->
         <section class="bg-white rounded-2xl shadow-md p-8">
             <h2 class="text-2xl font-semibold text-gray-800 mb-6 flex items-center gap-3">
                 <span class="bg-indigo-100 text-indigo-600 rounded-full w-10 h-10 flex items-center justify-center text-lg font-bold">1</span>
                 Inscription du Candidat
             </h2>
             <form id="candidat-form" class="space-y-5">
+                <!-- Nom / Prénom -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div>
                         <label for="nom" class="block text-sm font-medium text-gray-700 mb-1">Nom</label>
@@ -46,38 +75,97 @@
                             placeholder="Marie">
                     </div>
                 </div>
+
+                <!-- Email -->
                 <div>
                     <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                    <input type="email" id="email" name="email" required
-                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
-                        placeholder="marie.dupont@email.com">
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                        </span>
+                        <input type="email" id="email" name="email" required
+                            class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                            placeholder="marie.dupont@email.com">
+                    </div>
                 </div>
+
+                <!-- LinkedIn -->
+                <div>
+                    <label for="linkedin" class="block text-sm font-medium text-gray-700 mb-1">Profil LinkedIn</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+                            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                        </span>
+                        <input type="url" id="linkedin" name="linkedin"
+                            class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                            placeholder="https://www.linkedin.com/in/votre-profil">
+                    </div>
+                </div>
+
+                <!-- 16 Personalities -->
                 <div>
                     <label for="personality-link" class="block text-sm font-medium text-gray-700 mb-1">
                         Lien du résultat 16 Personalities
                     </label>
-                    <input type="url" id="personality-link" name="personalityLink" required
-                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
-                        placeholder="https://www.16personalities.com/profiles/...">
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                        </span>
+                        <input type="url" id="personality-link" name="personalityLink" required
+                            class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                            placeholder="https://www.16personalities.com/profiles/...">
+                    </div>
                     <p class="text-xs text-gray-500 mt-1">Collez ici le lien vers votre profil 16 Personalities</p>
                 </div>
+
+                <!-- Upload CV -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">CV (PDF)</label>
+                    <div id="cv-drop-zone" class="cv-upload-zone rounded-lg p-6 text-center cursor-pointer">
+                        <input type="file" id="cv-file" accept=".pdf" class="hidden">
+                        <div id="cv-placeholder" class="flex flex-col items-center gap-2">
+                            <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.338-2.32 3.75 3.75 0 013.572 5.064A4.5 4.5 0 0118 19.5H6.75z"/></svg>
+                            <p class="text-sm text-gray-500">Cliquez ou glissez-déposez votre CV ici</p>
+                            <p class="text-xs text-gray-400">PDF uniquement, max 5 Mo</p>
+                        </div>
+                        <div id="cv-selected" class="hidden flex items-center justify-center gap-2 text-indigo-600">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                            <span id="cv-filename" class="font-medium text-sm"></span>
+                            <button type="button" id="cv-remove" class="ml-2 text-red-400 hover:text-red-600">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Barre de progression upload -->
+                    <div id="cv-progress-container" class="hidden mt-2">
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div id="cv-progress-bar" class="upload-progress bg-indigo-600 h-2 rounded-full" style="width: 0%"></div>
+                        </div>
+                        <p id="cv-progress-text" class="text-xs text-gray-500 mt-1">Upload en cours...</p>
+                    </div>
+                </div>
+
                 <button type="submit" id="btn-inscrire"
-                    class="w-full bg-indigo-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-indigo-700 transition-colors">
+                    class="w-full bg-indigo-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
                     Inscrire le candidat
                 </button>
             </form>
-            <div id="inscription-success" class="hidden mt-4 p-4 bg-green-50 border border-green-200 text-green-700 rounded-lg">
+            <div id="inscription-success" class="hidden mt-4 p-4 bg-green-50 border border-green-200 text-green-700 rounded-lg flex items-center gap-2">
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 Candidat inscrit avec succès !
             </div>
         </section>
 
-        <!-- Section 2 : Observation des Soft Skills -->
+        <!-- ============================================ -->
+        <!-- Section 2 : Observation - Notation étoiles  -->
+        <!-- ============================================ -->
         <section class="bg-white rounded-2xl shadow-md p-8">
             <h2 class="text-2xl font-semibold text-gray-800 mb-2 flex items-center gap-3">
                 <span class="bg-purple-100 text-purple-600 rounded-full w-10 h-10 flex items-center justify-center text-lg font-bold">2</span>
                 Observation - Savoir-être
             </h2>
-            <p class="text-gray-500 mb-6">Cliquez sur une compétence pour ajouter un point lors de la session de jeu.</p>
+            <p class="text-gray-500 mb-6">Évaluez chaque compétence de 1 à 5 étoiles pendant la session de jeu.</p>
 
             <!-- Sélection du candidat -->
             <div class="mb-6">
@@ -88,22 +176,25 @@
                 </select>
             </div>
 
-            <!-- Grille des 14 savoir-être -->
-            <div id="skills-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <!-- Les boutons sont générés dynamiquement par app.js -->
+            <!-- Grille des 14 savoir-être avec étoiles -->
+            <div id="skills-grid" class="space-y-3">
+                <!-- Généré dynamiquement par app.js -->
             </div>
 
             <div class="mt-6 flex gap-4">
                 <button id="btn-save-observation"
-                    class="flex-1 bg-purple-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-purple-700 transition-colors">
+                    class="flex-1 bg-purple-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-purple-700 transition-colors flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
                     Sauvegarder l'observation
                 </button>
                 <button id="btn-reset-scores"
-                    class="px-6 py-3 border-2 border-gray-300 text-gray-600 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
+                    class="px-6 py-3 border-2 border-gray-300 text-gray-600 rounded-lg font-semibold hover:bg-gray-100 transition-colors flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                     Réinitialiser
                 </button>
             </div>
-            <div id="observation-success" class="hidden mt-4 p-4 bg-green-50 border border-green-200 text-green-700 rounded-lg">
+            <div id="observation-success" class="hidden mt-4 p-4 bg-green-50 border border-green-200 text-green-700 rounded-lg flex items-center gap-2">
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 Observation sauvegardée avec succès !
             </div>
         </section>
@@ -118,6 +209,7 @@
     <!-- Firebase SDK (compat mode pour utilisation via balise script) -->
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics-compat.js"></script>
 
     <script src="firebase-config.js"></script>
