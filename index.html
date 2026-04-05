@@ -107,20 +107,60 @@
                     </div>
                 </div>
 
-                <!-- 16 Personalities -->
+                <!-- 16 Personalities : menu déroulant -->
+                <div>
+                    <label for="profilPsy" class="block text-sm font-medium text-gray-700 mb-1">
+                        Profil psychologique (16 Personalities)
+                    </label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400 pointer-events-none">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                        </span>
+                        <select id="profilPsy" name="profilPsy" required
+                            class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none appearance-none bg-white">
+                            <option value="">-- Sélectionnez votre type --</option>
+                            <optgroup label="Analystes">
+                                <option value="INTJ">INTJ - Architecte</option>
+                                <option value="INTP">INTP - Logicien</option>
+                                <option value="ENTJ">ENTJ - Commandant</option>
+                                <option value="ENTP">ENTP - Innovateur</option>
+                            </optgroup>
+                            <optgroup label="Diplomates">
+                                <option value="INFJ">INFJ - Avocat</option>
+                                <option value="INFP">INFP - Médiateur</option>
+                                <option value="ENFJ">ENFJ - Protagoniste</option>
+                                <option value="ENFP">ENFP - Inspirateur</option>
+                            </optgroup>
+                            <optgroup label="Sentinelles">
+                                <option value="ISTJ">ISTJ - Logisticien</option>
+                                <option value="ISFJ">ISFJ - Défenseur</option>
+                                <option value="ESTJ">ESTJ - Directeur</option>
+                                <option value="ESFJ">ESFJ - Consul</option>
+                            </optgroup>
+                            <optgroup label="Explorateurs">
+                                <option value="ISTP">ISTP - Virtuose</option>
+                                <option value="ISFP">ISFP - Aventurier</option>
+                                <option value="ESTP">ESTP - Entrepreneur</option>
+                                <option value="ESFP">ESFP - Amuseur</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Lien preuve 16 Personalities (optionnel) -->
                 <div>
                     <label for="personality-link" class="block text-sm font-medium text-gray-700 mb-1">
-                        Lien du résultat 16 Personalities
+                        Lien de preuve 16 Personalities <span class="text-gray-400 font-normal">(optionnel)</span>
                     </label>
                     <div class="relative">
                         <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
                         </span>
-                        <input type="url" id="personality-link" name="personalityLink" required
+                        <input type="url" id="personality-link" name="personalityLink"
                             class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
                             placeholder="https://www.16personalities.com/profiles/...">
                     </div>
-                    <p class="text-xs text-gray-500 mt-1">Collez ici le lien vers votre profil 16 Personalities</p>
+                    <p class="text-xs text-gray-500 mt-1">Collez le lien vers votre résultat en guise de preuve</p>
                 </div>
 
                 <!-- Upload CV -->
