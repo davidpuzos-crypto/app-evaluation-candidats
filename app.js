@@ -242,6 +242,7 @@ function setupFormHandler() {
             prenom: document.getElementById("prenom").value.trim(),
             email: document.getElementById("email").value.trim(),
             linkedin: document.getElementById("linkedin").value.trim(),
+            profil_psy: document.getElementById("profilPsy").value,
             personalityLink: document.getElementById("personality-link").value.trim(),
             cvURL: null,
             dateInscription: firebase.firestore.FieldValue.serverTimestamp()
