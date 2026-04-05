@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Évaluation Candidats - Soft Skills</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'Inter', system-ui, sans-serif; }
+        .skill-btn { transition: all 0.2s ease; }
+        .skill-btn:hover { transform: translateY(-1px); }
+        .skill-btn.active { ring: 2px; }
+        .score-badge { min-width: 2rem; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+    <!-- Header -->
+    <header class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg">
+        <div class="max-w-4xl mx-auto px-6 py-8">
+            <h1 class="text-3xl font-bold">Évaluation des Candidats</h1>
+            <p class="mt-2 text-indigo-100">Recrutement basé sur les Soft Skills</p>
+        </div>
+    </header>
+
+    <main class="max-w-4xl mx-auto px-6 py-10 space-y-10">
+
+        <!-- Section 1 : Inscription Candidat -->
+        <section class="bg-white rounded-2xl shadow-md p-8">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-6 flex items-center gap-3">
+                <span class="bg-indigo-100 text-indigo-600 rounded-full w-10 h-10 flex items-center justify-center text-lg font-bold">1</span>
+                Inscription du Candidat
+            </h2>
+            <form id="candidat-form" class="space-y-5">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div>
+                        <label for="nom" class="block text-sm font-medium text-gray-700 mb-1">Nom</label>
+                        <input type="text" id="nom" name="nom" required
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                            placeholder="Dupont">
+                    </div>
+                    <div>
+                        <label for="prenom" class="block text-sm font-medium text-gray-700 mb-1">Prénom</label>
+                        <input type="text" id="prenom" name="prenom" required
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                            placeholder="Marie">
+                    </div>
+                </div>
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <input type="email" id="email" name="email" required
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                        placeholder="marie.dupont@email.com">
+                </div>
+                <div>
+                    <label for="personality-link" class="block text-sm font-medium text-gray-700 mb-1">
+                        Lien du résultat 16 Personalities
+                    </label>
+                    <input type="url" id="personality-link" name="personalityLink" required
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                        placeholder="https://www.16personalities.com/profiles/...">
+                    <p class="text-xs text-gray-500 mt-1">Collez ici le lien vers votre profil 16 Personalities</p>
+                </div>
+                <button type="submit" id="btn-inscrire"
+                    class="w-full bg-indigo-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-indigo-700 transition-colors">
+                    Inscrire le candidat
+                </button>
+            </form>
+            <div id="inscription-success" class="hidden mt-4 p-4 bg-green-50 border border-green-200 text-green-700 rounded-lg">
+                Candidat inscrit avec succès !
+            </div>
+        </section>
+
+        <!-- Section 2 : Observation des Soft Skills -->
+        <section class="bg-white rounded-2xl shadow-md p-8">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-2 flex items-center gap-3">
+                <span class="bg-purple-100 text-purple-600 rounded-full w-10 h-10 flex items-center justify-center text-lg font-bold">2</span>
+                Observation - Savoir-être
+            </h2>
+            <p class="text-gray-500 mb-6">Cliquez sur une compétence pour ajouter un point lors de la session de jeu.</p>
+
+            <!-- Sélection du candidat -->
+            <div class="mb-6">
+                <label for="select-candidat" class="block text-sm font-medium text-gray-700 mb-1">Candidat observé</label>
+                <select id="select-candidat"
+                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none">
+                    <option value="">-- Sélectionner un candidat --</option>
+                </select>
+            </div>
+
+            <!-- Grille des 14 savoir-être -->
+            <div id="skills-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <!-- Les boutons sont générés dynamiquement par app.js -->
+            </div>
+
+            <div class="mt-6 flex gap-4">
+                <button id="btn-save-observation"
+                    class="flex-1 bg-purple-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-purple-700 transition-colors">
+                    Sauvegarder l'observation
+                </button>
+                <button id="btn-reset-scores"
+                    class="px-6 py-3 border-2 border-gray-300 text-gray-600 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
+                    Réinitialiser
+                </button>
+            </div>
+            <div id="observation-success" class="hidden mt-4 p-4 bg-green-50 border border-green-200 text-green-700 rounded-lg">
+                Observation sauvegardée avec succès !
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="text-center py-6 text-gray-400 text-sm">
+        Application d'évaluation des candidats &mdash; Recrutement Soft Skills
+    </footer>
+
+    <!-- Firebase SDK (compat mode pour utilisation via balise script) -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics-compat.js"></script>
+
+    <script src="firebase-config.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

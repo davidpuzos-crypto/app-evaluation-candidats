@@ -1,0 +1,21 @@
+// Firebase configuration
+const firebaseConfig = {
+    apiKey: "AIzaSyBLMERKeQ9AnU4uRc2XRcWja7ZRqi7arNE",
+    authDomain: "app-evaluation-candidats.firebaseapp.com",
+    projectId: "app-evaluation-candidats",
+    storageBucket: "app-evaluation-candidats.firebasestorage.app",
+    messagingSenderId: "521001892400",
+    appId: "1:521001892400:web:YOUR_APP_ID",
+    measurementId: "G-XXXXXXXXXX"
+};
+
+// Initialisation de Firebase
+firebase.initializeApp(firebaseConfig);
+
+// Initialisation de Firestore
+const db = firebase.firestore();
+
+// Initialisation d'Analytics (optionnel)
+if (typeof firebase.analytics === "function") {
+    firebase.analytics();
+}
