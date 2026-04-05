@@ -41,11 +41,11 @@ function initSkillsGrid() {
         scores[skill.nom] = 0;
 
         const row = document.createElement("div");
-        row.className = "flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-indigo-50 border border-gray-200 rounded-xl transition-colors";
+        row.className = "flex items-center justify-between px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl";
 
         // Icône + nom
         const label = document.createElement("div");
-        label.className = "flex items-center gap-3 min-w-0";
+        label.className = "flex items-center gap-3 min-w-0 flex-1";
         label.innerHTML = `
             <svg class="w-5 h-5 text-indigo-500 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="${skill.icon}"/>
@@ -53,63 +53,88 @@ function initSkillsGrid() {
             <span class="font-medium text-gray-700 text-sm">${skill.nom}</span>
         `;
 
-        // Étoiles
+        // Conteneur étoiles + label note
+        const ratingWrap = document.createElement("div");
+        ratingWrap.className = "flex items-center gap-2 flex-shrink-0";
+
         const starsContainer = document.createElement("div");
-        starsContainer.className = "star-rating flex-shrink-0";
+        starsContainer.className = "star-rating";
+
         for (let i = 1; i <= 5; i++) {
-            const star = document.createElement("svg");
-            star.className = "star empty";
-            star.setAttribute("data-skill", skill.nom);
-            star.setAttribute("data-value", i);
-            star.setAttribute("viewBox", "0 0 24 24");
-            star.setAttribute("stroke", "currentColor");
-            star.setAttribute("stroke-width", "1.5");
-            star.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>`;
-            star.addEventListener("click", () => setRating(skill.nom, i));
-            star.addEventListener("mouseenter", () => previewRating(skill.nom, i));
-            star.addEventListener("mouseleave", () => restoreRating(skill.nom));
-            starsContainer.appendChild(star);
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "star-btn";
+            btn.setAttribute("data-skill", skill.nom);
+            btn.setAttribute("data-value", i);
+            btn.setAttribute("title", `${i}/5`);
+            btn.innerHTML = `<span class="star-off">&#9734;</span><span class="star-on" style="color:#f59e0b;">&#9733;</span>`;
+
+            btn.addEventListener("click", () => setRating(skill.nom, i));
+            btn.addEventListener("mouseenter", () => previewRating(skill.nom, i));
+            btn.addEventListener("mouseleave", () => restoreRating(skill.nom));
+            starsContainer.appendChild(btn);
         }
 
+        // Badge textuel de la note
+        const badge = document.createElement("span");
+        badge.className = "text-xs font-bold text-gray-400 w-8 text-right";
+        badge.setAttribute("data-score-label", skill.nom);
+        badge.textContent = "—";
+
+        ratingWrap.appendChild(starsContainer);
+        ratingWrap.appendChild(badge);
         row.appendChild(label);
-        row.appendChild(starsContainer);
+        row.appendChild(ratingWrap);
         grid.appendChild(row);
     });
 }
 
 function setRating(skillName, value) {
-    scores[skillName] = value;
-    updateStars(skillName, value);
+    // Cliquer sur la même étoile déjà sélectionnée = désélectionner
+    if (scores[skillName] === value) {
+        scores[skillName] = 0;
+    } else {
+        scores[skillName] = value;
+    }
+    updateStars(skillName, scores[skillName]);
+    updateScoreLabel(skillName);
 }
 
 function previewRating(skillName, value) {
-    updateStars(skillName, value);
+    const btns = document.querySelectorAll(`.star-btn[data-skill="${skillName}"]`);
+    btns.forEach(btn => {
+        const v = parseInt(btn.getAttribute("data-value"));
+        btn.classList.toggle("preview", v <= value && !btn.classList.contains("filled"));
+    });
 }
 
 function restoreRating(skillName) {
-    updateStars(skillName, scores[skillName]);
+    const btns = document.querySelectorAll(`.star-btn[data-skill="${skillName}"]`);
+    btns.forEach(btn => btn.classList.remove("preview"));
 }
 
 function updateStars(skillName, value) {
-    const stars = document.querySelectorAll(`.star[data-skill="${skillName}"]`);
-    stars.forEach(star => {
-        const starValue = parseInt(star.getAttribute("data-value"));
-        if (starValue <= value) {
-            star.classList.remove("empty");
-            star.classList.add("filled");
-            star.setAttribute("fill", "currentColor");
-        } else {
-            star.classList.remove("filled");
-            star.classList.add("empty");
-            star.setAttribute("fill", "none");
-        }
+    const btns = document.querySelectorAll(`.star-btn[data-skill="${skillName}"]`);
+    btns.forEach(btn => {
+        const v = parseInt(btn.getAttribute("data-value"));
+        btn.classList.toggle("filled", v <= value);
+        btn.classList.remove("preview");
     });
+}
+
+function updateScoreLabel(skillName) {
+    const label = document.querySelector(`[data-score-label="${skillName}"]`);
+    label.textContent = scores[skillName] > 0 ? `${scores[skillName]}/5` : "—";
+    label.className = scores[skillName] > 0
+        ? "text-xs font-bold text-amber-600 w-8 text-right"
+        : "text-xs font-bold text-gray-400 w-8 text-right";
 }
 
 function resetScores() {
     SAVOIR_ETRE.forEach(skill => {
         scores[skill.nom] = 0;
         updateStars(skill.nom, 0);
+        updateScoreLabel(skill.nom);
     });
 }
 
