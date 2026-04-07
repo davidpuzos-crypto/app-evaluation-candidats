@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tableau de bord - Bilan de Compétences</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        body { font-family: 'Inter', system-ui, sans-serif; }
+        .sidebar-item { transition: background-color 0.15s ease, border-color 0.15s ease; }
+        .sidebar-item:hover { background-color: #f3f0ff; }
+        .sidebar-item.active { background-color: #ede9fe; border-left-color: #7c3aed; }
+        .progress-fill { transition: width 0.7s ease; }
+        .custom-scroll::-webkit-scrollbar { width: 5px; }
+        .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #d8b4fe; border-radius: 9px; }
+    </style>
+</head>
+<body class="bg-gray-100 h-screen flex flex-col overflow-hidden">
+
+    <!-- ============================================ -->
+    <!-- Header                                       -->
+    <!-- ============================================ -->
+    <header class="bg-gradient-to-r from-violet-700 via-purple-700 to-indigo-700 text-white shadow-lg flex-shrink-0">
+        <div class="px-6 py-3.5 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-lg bg-white/15 flex items-center justify-center">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold tracking-tight">Tableau de bord Recruteur</h1>
+                    <p class="text-xs text-purple-200">Bilan de compétences des candidats</p>
+                </div>
+            </div>
+            <a href="index.html" class="flex items-center gap-2 bg-white/10 hover:bg-white/20 border border-white/10 px-4 py-2 rounded-lg text-sm font-medium transition-all">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 17l-5-5m0 0l5-5m-5 5h12"/></svg>
+                Évaluation
+            </a>
+        </div>
+    </header>
+
+    <!-- ============================================ -->
+    <!-- Layout : Sidebar (25%) + Main (75%)          -->
+    <!-- ============================================ -->
+    <div class="flex flex-1 overflow-hidden">
+
+        <!-- ======================== -->
+        <!-- SIDEBAR : 25%            -->
+        <!-- ======================== -->
+        <aside class="w-1/4 min-w-[280px] max-w-[360px] bg-gray-50 border-r border-gray-200 flex flex-col">
+            <!-- Titre + Recherche -->
+            <div class="p-5 border-b border-gray-200">
+                <h2 class="text-sm font-bold text-gray-600 uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <svg class="w-4 h-4 text-violet-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    Liste des Candidats
+                </h2>
+                <div class="relative">
+                    <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    <input type="text" id="search-input" placeholder="Rechercher un candidat..."
+                        class="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-400 focus:border-violet-400 outline-none bg-white">
+                </div>
+            </div>
+            <!-- Liste -->
+            <ul id="candidat-list" class="flex-1 overflow-y-auto custom-scroll">
+                <li class="p-6 text-center text-gray-400 text-sm">Chargement des candidats...</li>
+            </ul>
+            <!-- Compteur -->
+            <div class="p-3 border-t border-gray-200 bg-gray-100 text-center">
+                <span id="candidat-count" class="text-xs text-gray-500 font-medium">0 candidat(s)</span>
+            </div>
+        </aside>
+
+        <!-- ======================== -->
+        <!-- MAIN : 75%               -->
+        <!-- ======================== -->
+        <main class="flex-1 overflow-y-auto custom-scroll bg-gray-100 p-6">
+
+            <!-- État vide (pas de candidat sélectionné) -->
+            <div id="empty-state" class="flex flex-col items-center justify-center h-full text-gray-400">
+                <svg class="w-20 h-20 mb-4 text-gray-300" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                <p class="text-xl font-semibold text-gray-500">Sélectionnez un candidat</p>
+                <p class="text-sm mt-1">Cliquez sur un nom dans la liste pour afficher son bilan de compétences</p>
+            </div>
+
+            <!-- Conteneur du Bilan (caché par défaut) -->
+            <div id="bilan-container" class="hidden bg-white rounded-2xl shadow-xl overflow-hidden">
+
+                <!-- ====== En-tête du Bilan ====== -->
+                <div class="relative bg-gradient-to-r from-violet-600 to-indigo-600 text-white px-8 py-6">
+                    <!-- Bouton PDF (en haut à droite) -->
+                    <button id="btn-export-pdf"
+                        class="absolute top-5 right-6 flex items-center gap-2 bg-white/15 hover:bg-white/25 border border-white/20 px-4 py-2 rounded-lg text-sm font-medium transition-all">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17v3a2 2 0 002 2h14a2 2 0 002-2v-3"/></svg>
+                        Télécharger le Bilan (PDF)
+                    </button>
+
+                    <h2 class="text-3xl font-extrabold">
+                        <span id="bilan-prenom"></span> <span id="bilan-nom"></span>
+                    </h2>
+
+                    <!-- Badges -->
+                    <div class="flex flex-wrap items-center gap-2 mt-3">
+                        <span id="badge-email" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 text-sm">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                            <span id="bilan-email"></span>
+                        </span>
+                        <span id="badge-profil" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-yellow-400/20 text-yellow-200 text-sm font-bold">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                            <span id="bilan-profil-psy"></span>
+                        </span>
+                    </div>
+
+                    <!-- Boutons CV & LinkedIn -->
+                    <div class="flex flex-wrap gap-2 mt-4">
+                        <a id="btn-cv" href="#" target="_blank" class="hidden items-center gap-2 px-4 py-2 bg-white text-violet-700 rounded-lg text-sm font-semibold hover:bg-gray-100 transition-colors shadow-sm">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                            Voir le CV
+                        </a>
+                        <a id="btn-linkedin" href="#" target="_blank" class="hidden items-center gap-2 px-4 py-2 bg-white text-blue-700 rounded-lg text-sm font-semibold hover:bg-gray-100 transition-colors shadow-sm">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                            LinkedIn
+                        </a>
+                    </div>
+                </div>
+
+                <!-- ====== Corps du Bilan (Grid 2 colonnes) ====== -->
+                <div class="p-8">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+                        <!-- Colonne Gauche : Radar Chart -->
+                        <div>
+                            <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                                <svg class="w-5 h-5 text-violet-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/></svg>
+                                Radar des Savoir-être
+                            </h3>
+                            <div class="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                                <canvas id="radar-chart"></canvas>
+                            </div>
+                            <p id="no-observation-msg" class="hidden text-center text-gray-400 text-sm py-6">Aucune observation enregistrée.</p>
+                        </div>
+
+                        <!-- Colonne Droite : Adéquation Secteurs -->
+                        <div>
+                            <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                                <svg class="w-5 h-5 text-violet-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                                Adéquation Secteurs d'Activité
+                            </h3>
+                            <div id="secteurs-container" class="space-y-5">
+                                <!-- Généré dynamiquement -->
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </main>
+
+    </div>
+
+    <!-- Firebase SDK (compat) -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+    <script src="dashboard.js"></script>
+</body>
+</html>
