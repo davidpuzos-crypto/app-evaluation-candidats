@@ -18,6 +18,9 @@ const SAVOIR_ETRE = [
     { nom: "Persévérance",           icon: "M13 10V3L4 14h7v7l9-11h-7z" }
 ];
 
+// Le path SVG d'une étoile à 5 branches
+const STAR_PATH = "M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z";
+
 // Scores en cours pour la session d'observation (notation 1-5)
 let scores = {};
 
@@ -33,7 +36,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // ============================================================
-// Génération de la grille des compétences avec étoiles
+// Génération de la grille des compétences avec étoiles SVG
 // ============================================================
 function initSkillsGrid() {
     const grid = document.getElementById("skills-grid");
@@ -41,43 +44,49 @@ function initSkillsGrid() {
         scores[skill.nom] = 0;
 
         const row = document.createElement("div");
-        row.className = "flex items-center justify-between px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl";
+        row.className = "skill-row flex items-center justify-between px-5 py-3.5";
 
         // Icône + nom
         const label = document.createElement("div");
         label.className = "flex items-center gap-3 min-w-0 flex-1";
         label.innerHTML = `
-            <svg class="w-5 h-5 text-indigo-500 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="${skill.icon}"/>
-            </svg>
-            <span class="font-medium text-gray-700 text-sm">${skill.nom}</span>
+            <div class="w-8 h-8 rounded-lg bg-brand-800/60 flex items-center justify-center flex-shrink-0">
+                <svg class="w-4 h-4 text-brand-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="${skill.icon}"/>
+                </svg>
+            </div>
+            <span class="font-medium text-brand-100 text-sm">${skill.nom}</span>
         `;
 
-        // Conteneur étoiles + label note
+        // Conteneur étoiles + badge
         const ratingWrap = document.createElement("div");
-        ratingWrap.className = "flex items-center gap-2 flex-shrink-0";
+        ratingWrap.className = "flex items-center gap-2.5 flex-shrink-0";
 
         const starsContainer = document.createElement("div");
-        starsContainer.className = "star-rating";
+        starsContainer.className = "flex items-center gap-1";
 
         for (let i = 1; i <= 5; i++) {
-            const btn = document.createElement("button");
-            btn.type = "button";
-            btn.className = "star-btn";
-            btn.setAttribute("data-skill", skill.nom);
-            btn.setAttribute("data-value", i);
-            btn.setAttribute("title", `${i}/5`);
-            btn.innerHTML = `<span class="star-off">&#9734;</span><span class="star-on" style="color:#f59e0b;">&#9733;</span>`;
+            const star = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            star.setAttribute("viewBox", "0 0 24 24");
+            star.setAttribute("class", "star-svg");
+            star.setAttribute("data-skill", skill.nom);
+            star.setAttribute("data-value", i);
 
-            btn.addEventListener("click", () => setRating(skill.nom, i));
-            btn.addEventListener("mouseenter", () => previewRating(skill.nom, i));
-            btn.addEventListener("mouseleave", () => restoreRating(skill.nom));
-            starsContainer.appendChild(btn);
+            const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            path.setAttribute("d", STAR_PATH);
+            path.setAttribute("class", "star-path");
+            path.setAttribute("stroke", "none");
+            star.appendChild(path);
+
+            star.addEventListener("click", () => setRating(skill.nom, i));
+            star.addEventListener("mouseenter", () => previewRating(skill.nom, i));
+            star.addEventListener("mouseleave", () => restoreRating(skill.nom));
+            starsContainer.appendChild(star);
         }
 
-        // Badge textuel de la note
+        // Badge textuel
         const badge = document.createElement("span");
-        badge.className = "text-xs font-bold text-gray-400 w-8 text-right";
+        badge.className = "text-xs font-bold text-brand-600 w-8 text-right tabular-nums";
         badge.setAttribute("data-score-label", skill.nom);
         badge.textContent = "—";
 
@@ -89,45 +98,48 @@ function initSkillsGrid() {
     });
 }
 
+// ============================================================
+// Interaction étoiles
+// ============================================================
 function setRating(skillName, value) {
-    // Cliquer sur la même étoile déjà sélectionnée = désélectionner
-    if (scores[skillName] === value) {
-        scores[skillName] = 0;
-    } else {
-        scores[skillName] = value;
-    }
+    scores[skillName] = scores[skillName] === value ? 0 : value;
     updateStars(skillName, scores[skillName]);
     updateScoreLabel(skillName);
 }
 
 function previewRating(skillName, value) {
-    const btns = document.querySelectorAll(`.star-btn[data-skill="${skillName}"]`);
-    btns.forEach(btn => {
-        const v = parseInt(btn.getAttribute("data-value"));
-        btn.classList.toggle("preview", v <= value && !btn.classList.contains("filled"));
+    const stars = document.querySelectorAll(`.star-svg[data-skill="${skillName}"]`);
+    stars.forEach(star => {
+        const v = parseInt(star.getAttribute("data-value"));
+        if (v <= value && !star.classList.contains("filled")) {
+            star.classList.add("preview");
+        }
     });
 }
 
 function restoreRating(skillName) {
-    const btns = document.querySelectorAll(`.star-btn[data-skill="${skillName}"]`);
-    btns.forEach(btn => btn.classList.remove("preview"));
+    const stars = document.querySelectorAll(`.star-svg[data-skill="${skillName}"]`);
+    stars.forEach(star => star.classList.remove("preview"));
 }
 
 function updateStars(skillName, value) {
-    const btns = document.querySelectorAll(`.star-btn[data-skill="${skillName}"]`);
-    btns.forEach(btn => {
-        const v = parseInt(btn.getAttribute("data-value"));
-        btn.classList.toggle("filled", v <= value);
-        btn.classList.remove("preview");
+    const stars = document.querySelectorAll(`.star-svg[data-skill="${skillName}"]`);
+    stars.forEach(star => {
+        const v = parseInt(star.getAttribute("data-value"));
+        star.classList.toggle("filled", v <= value);
+        star.classList.remove("preview");
     });
 }
 
 function updateScoreLabel(skillName) {
     const label = document.querySelector(`[data-score-label="${skillName}"]`);
-    label.textContent = scores[skillName] > 0 ? `${scores[skillName]}/5` : "—";
-    label.className = scores[skillName] > 0
-        ? "text-xs font-bold text-amber-600 w-8 text-right"
-        : "text-xs font-bold text-gray-400 w-8 text-right";
+    if (scores[skillName] > 0) {
+        label.textContent = `${scores[skillName]}/5`;
+        label.className = "text-xs font-bold text-yellow-400 w-8 text-right tabular-nums";
+    } else {
+        label.textContent = "—";
+        label.className = "text-xs font-bold text-brand-600 w-8 text-right tabular-nums";
+    }
 }
 
 function resetScores() {
@@ -235,7 +247,10 @@ function setupFormHandler() {
 
         const btn = document.getElementById("btn-inscrire");
         btn.disabled = true;
-        btn.textContent = "Inscription en cours...";
+        btn.innerHTML = `
+            <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+            Inscription...
+        `;
 
         const candidat = {
             nom: document.getElementById("nom").value.trim(),
@@ -249,10 +264,8 @@ function setupFormHandler() {
         };
 
         try {
-            // Créer le document candidat d'abord
             const docRef = await db.collection("candidats").add(candidat);
 
-            // Upload du CV si présent
             const cvFile = document.getElementById("cv-file").files[0];
             if (cvFile) {
                 const cvURL = await uploadCV(cvFile, docRef.id);
@@ -260,7 +273,6 @@ function setupFormHandler() {
             }
 
             form.reset();
-            // Réinitialiser la zone CV
             document.getElementById("cv-placeholder").classList.remove("hidden");
             document.getElementById("cv-selected").classList.add("hidden");
 
@@ -284,7 +296,7 @@ function setupFormHandler() {
 // ============================================================
 async function loadCandidats() {
     const select = document.getElementById("select-candidat");
-    select.innerHTML = '<option value="">-- Sélectionner un candidat --</option>';
+    select.innerHTML = '<option value="">-- Candidat --</option>';
 
     try {
         const snapshot = await db.collection("candidats").orderBy("dateInscription", "desc").get();
@@ -315,12 +327,18 @@ async function saveObservation() {
         return;
     }
 
-    // Vérifier qu'au moins une compétence a été notée
     const hasScores = Object.values(scores).some(v => v > 0);
     if (!hasScores) {
         alert("Veuillez noter au moins une compétence.");
         return;
     }
+
+    const btn = document.getElementById("btn-save-observation");
+    btn.disabled = true;
+    btn.innerHTML = `
+        <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+        Sauvegarde...
+    `;
 
     const observation = {
         candidatId: candidatId,
@@ -329,10 +347,7 @@ async function saveObservation() {
     };
 
     try {
-        // Sauvegarder l'observation en sous-collection
         await db.collection("candidats").doc(candidatId).collection("observations").add(observation);
-
-        // Mettre à jour aussi les notes directement sur la fiche candidat
         await db.collection("candidats").doc(candidatId).update({
             dernieresNotes: { ...scores },
             dateDerniereObservation: firebase.firestore.FieldValue.serverTimestamp()
@@ -343,6 +358,12 @@ async function saveObservation() {
     } catch (error) {
         console.error("Erreur lors de la sauvegarde :", error);
         alert("Erreur lors de la sauvegarde. Vérifiez la console.");
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = `
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            Sauvegarder l'observation
+        `;
     }
 }
 
