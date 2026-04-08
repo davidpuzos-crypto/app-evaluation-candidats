@@ -1,5 +1,5 @@
 // ============================================================
-// Référentiel des 14 savoir-être avec icônes SVG
+// Référentiel des 14 savoir-être
 // ============================================================
 const SAVOIR_ETRE = [
     { nom: "Capacité d'adaptation",  icon: "M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" },
@@ -18,10 +18,18 @@ const SAVOIR_ETRE = [
     { nom: "Persévérance",           icon: "M13 10V3L4 14h7v7l9-11h-7z" }
 ];
 
-// Le path SVG d'une étoile à 5 branches
 const STAR_PATH = "M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z";
 
-// Scores en cours pour la session d'observation (notation 1-5)
+// Labels qualitatifs bienveillants
+const LABELS_QUALITATIFS = [
+    "",                 // 0 = pas encore observé
+    "En émergence",     // 1
+    "En développement", // 2
+    "Observé",          // 3
+    "Bien observé",     // 4
+    "Point fort"        // 5
+];
+
 let scores = {};
 
 // ============================================================
@@ -33,10 +41,25 @@ document.addEventListener("DOMContentLoaded", () => {
     setupFormHandler();
     setupObservationHandlers();
     setupCvUpload();
+    setupGuideToggle();
+    setupCandidatChange();
 });
 
 // ============================================================
-// Génération de la grille des compétences avec étoiles SVG
+// Guide animateur (toggle)
+// ============================================================
+function setupGuideToggle() {
+    const btn = document.getElementById("guide-toggle");
+    const content = document.getElementById("guide-content");
+    const chevron = document.getElementById("guide-chevron");
+    btn.addEventListener("click", () => {
+        content.classList.toggle("open");
+        chevron.style.transform = content.classList.contains("open") ? "rotate(180deg)" : "";
+    });
+}
+
+// ============================================================
+// Grille des compétences avec étoiles SVG
 // ============================================================
 function initSkillsGrid() {
     const grid = document.getElementById("skills-grid");
@@ -44,26 +67,24 @@ function initSkillsGrid() {
         scores[skill.nom] = 0;
 
         const row = document.createElement("div");
-        row.className = "skill-row flex items-center justify-between px-5 py-3.5";
+        row.className = "skill-row flex items-center justify-between px-4 py-3";
 
-        // Icône + nom
         const label = document.createElement("div");
-        label.className = "flex items-center gap-3 min-w-0 flex-1";
+        label.className = "flex items-center gap-2.5 min-w-0 flex-1";
         label.innerHTML = `
-            <div class="w-8 h-8 rounded-lg bg-brand-800/60 flex items-center justify-center flex-shrink-0">
-                <svg class="w-4 h-4 text-brand-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <div class="w-7 h-7 rounded-lg bg-white/5 flex items-center justify-center flex-shrink-0">
+                <svg class="w-3.5 h-3.5 text-brand-400/70" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="${skill.icon}"/>
                 </svg>
             </div>
-            <span class="font-medium text-brand-100 text-sm">${skill.nom}</span>
+            <div class="min-w-0">
+                <span class="font-medium text-white/80 text-[13px] block">${skill.nom}</span>
+                <span class="text-[10px] text-white/20 block mt-0.5 qualitative-label" data-qlabel="${skill.nom}">Pas encore observé</span>
+            </div>
         `;
 
-        // Conteneur étoiles + badge
         const ratingWrap = document.createElement("div");
-        ratingWrap.className = "flex items-center gap-2.5 flex-shrink-0";
-
-        const starsContainer = document.createElement("div");
-        starsContainer.className = "flex items-center gap-1";
+        ratingWrap.className = "flex items-center gap-1 flex-shrink-0";
 
         for (let i = 1; i <= 5; i++) {
             const star = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -81,17 +102,9 @@ function initSkillsGrid() {
             star.addEventListener("click", () => setRating(skill.nom, i));
             star.addEventListener("mouseenter", () => previewRating(skill.nom, i));
             star.addEventListener("mouseleave", () => restoreRating(skill.nom));
-            starsContainer.appendChild(star);
+            ratingWrap.appendChild(star);
         }
 
-        // Badge textuel
-        const badge = document.createElement("span");
-        badge.className = "text-xs font-bold text-brand-600 w-8 text-right tabular-nums";
-        badge.setAttribute("data-score-label", skill.nom);
-        badge.textContent = "—";
-
-        ratingWrap.appendChild(starsContainer);
-        ratingWrap.appendChild(badge);
         row.appendChild(label);
         row.appendChild(ratingWrap);
         grid.appendChild(row);
@@ -99,46 +112,43 @@ function initSkillsGrid() {
 }
 
 // ============================================================
-// Interaction étoiles
+// Étoiles : interaction
 // ============================================================
 function setRating(skillName, value) {
     scores[skillName] = scores[skillName] === value ? 0 : value;
     updateStars(skillName, scores[skillName]);
-    updateScoreLabel(skillName);
+    updateQualitativeLabel(skillName);
 }
 
 function previewRating(skillName, value) {
-    const stars = document.querySelectorAll(`.star-svg[data-skill="${skillName}"]`);
-    stars.forEach(star => {
+    document.querySelectorAll(`.star-svg[data-skill="${skillName}"]`).forEach(star => {
         const v = parseInt(star.getAttribute("data-value"));
-        if (v <= value && !star.classList.contains("filled")) {
-            star.classList.add("preview");
-        }
+        if (v <= value && !star.classList.contains("filled")) star.classList.add("preview");
     });
 }
 
 function restoreRating(skillName) {
-    const stars = document.querySelectorAll(`.star-svg[data-skill="${skillName}"]`);
-    stars.forEach(star => star.classList.remove("preview"));
+    document.querySelectorAll(`.star-svg[data-skill="${skillName}"]`).forEach(star => star.classList.remove("preview"));
 }
 
 function updateStars(skillName, value) {
-    const stars = document.querySelectorAll(`.star-svg[data-skill="${skillName}"]`);
-    stars.forEach(star => {
+    document.querySelectorAll(`.star-svg[data-skill="${skillName}"]`).forEach(star => {
         const v = parseInt(star.getAttribute("data-value"));
         star.classList.toggle("filled", v <= value);
         star.classList.remove("preview");
     });
 }
 
-function updateScoreLabel(skillName) {
-    const label = document.querySelector(`[data-score-label="${skillName}"]`);
-    if (scores[skillName] > 0) {
-        label.textContent = `${scores[skillName]}/5`;
-        label.className = "text-xs font-bold text-yellow-400 w-8 text-right tabular-nums";
+function updateQualitativeLabel(skillName) {
+    const el = document.querySelector(`[data-qlabel="${skillName}"]`);
+    const val = scores[skillName];
+    if (val === 0) {
+        el.textContent = "Pas encore observé";
+        el.className = "text-[10px] text-white/20 block mt-0.5 qualitative-label";
     } else {
-        label.textContent = "—";
-        label.className = "text-xs font-bold text-brand-600 w-8 text-right tabular-nums";
+        el.textContent = LABELS_QUALITATIFS[val];
+        const colors = ["", "text-red-400/60", "text-orange-400/60", "text-yellow-400/60", "text-emerald-400/60", "text-emerald-300"];
+        el.className = `text-[10px] ${colors[val]} block mt-0.5 qualitative-label font-medium`;
     }
 }
 
@@ -146,12 +156,50 @@ function resetScores() {
     SAVOIR_ETRE.forEach(skill => {
         scores[skill.nom] = 0;
         updateStars(skill.nom, 0);
-        updateScoreLabel(skill.nom);
+        updateQualitativeLabel(skill.nom);
     });
+    const notes = document.getElementById("notes-animateur");
+    if (notes) notes.value = "";
 }
 
 // ============================================================
-// Upload CV : Drag & Drop + clic
+// Chargement des observations existantes quand on change de jeune
+// ============================================================
+function setupCandidatChange() {
+    document.getElementById("select-candidat").addEventListener("change", loadExistingObservation);
+}
+
+async function loadExistingObservation() {
+    const candidatId = document.getElementById("select-candidat").value;
+    if (!candidatId) { resetScores(); return; }
+
+    try {
+        const obsSnap = await db.collection("candidats").doc(candidatId)
+            .collection("observations").orderBy("dateObservation", "desc").limit(1).get();
+
+        if (!obsSnap.empty) {
+            const obs = obsSnap.docs[0].data();
+            if (obs.scores) {
+                SAVOIR_ETRE.forEach(skill => {
+                    scores[skill.nom] = obs.scores[skill.nom] || 0;
+                    updateStars(skill.nom, scores[skill.nom]);
+                    updateQualitativeLabel(skill.nom);
+                });
+            }
+            const notes = document.getElementById("notes-animateur");
+            if (notes && obs.notesAnimateur) notes.value = obs.notesAnimateur;
+            else if (notes) notes.value = "";
+        } else {
+            resetScores();
+        }
+    } catch (err) {
+        console.error("Erreur chargement observation :", err);
+        resetScores();
+    }
+}
+
+// ============================================================
+// Upload CV
 // ============================================================
 function setupCvUpload() {
     const dropZone = document.getElementById("cv-drop-zone");
@@ -162,95 +210,45 @@ function setupCvUpload() {
     const removeBtn = document.getElementById("cv-remove");
 
     dropZone.addEventListener("click", () => fileInput.click());
-
-    dropZone.addEventListener("dragover", (e) => {
-        e.preventDefault();
-        dropZone.classList.add("dragover");
-    });
-
-    dropZone.addEventListener("dragleave", () => {
-        dropZone.classList.remove("dragover");
-    });
-
+    dropZone.addEventListener("dragover", (e) => { e.preventDefault(); dropZone.classList.add("dragover"); });
+    dropZone.addEventListener("dragleave", () => dropZone.classList.remove("dragover"));
     dropZone.addEventListener("drop", (e) => {
-        e.preventDefault();
-        dropZone.classList.remove("dragover");
+        e.preventDefault(); dropZone.classList.remove("dragover");
         const file = e.dataTransfer.files[0];
-        if (file && file.type === "application/pdf") {
-            fileInput.files = e.dataTransfer.files;
-            showSelectedFile(file.name);
-        } else {
-            alert("Veuillez sélectionner un fichier PDF.");
-        }
+        if (file && file.type === "application/pdf") { fileInput.files = e.dataTransfer.files; showFile(file.name); }
+        else alert("Fichier PDF uniquement.");
     });
-
-    fileInput.addEventListener("change", () => {
-        if (fileInput.files.length > 0) {
-            showSelectedFile(fileInput.files[0].name);
-        }
-    });
-
-    removeBtn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        fileInput.value = "";
-        placeholder.classList.remove("hidden");
-        selected.classList.add("hidden");
-    });
-
-    function showSelectedFile(name) {
-        filename.textContent = name;
-        placeholder.classList.add("hidden");
-        selected.classList.remove("hidden");
-    }
+    fileInput.addEventListener("change", () => { if (fileInput.files.length > 0) showFile(fileInput.files[0].name); });
+    removeBtn.addEventListener("click", (e) => { e.stopPropagation(); fileInput.value = ""; placeholder.classList.remove("hidden"); selected.classList.add("hidden"); });
+    function showFile(name) { filename.textContent = name; placeholder.classList.add("hidden"); selected.classList.remove("hidden"); }
 }
 
-// ============================================================
-// Upload CV vers Firebase Storage
-// ============================================================
 function uploadCV(file, candidatId) {
     return new Promise((resolve, reject) => {
-        const storageRef = storage.ref(`cvs/${candidatId}/${file.name}`);
-        const uploadTask = storageRef.put(file);
-
-        const progressContainer = document.getElementById("cv-progress-container");
-        const progressBar = document.getElementById("cv-progress-bar");
-        const progressText = document.getElementById("cv-progress-text");
-        progressContainer.classList.remove("hidden");
-
-        uploadTask.on("state_changed",
-            (snapshot) => {
-                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                progressBar.style.width = progress + "%";
-                progressText.textContent = `Upload en cours... ${Math.round(progress)}%`;
-            },
-            (error) => {
-                progressContainer.classList.add("hidden");
-                reject(error);
-            },
-            async () => {
-                const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
-                progressText.textContent = "Upload terminé !";
-                setTimeout(() => progressContainer.classList.add("hidden"), 2000);
-                resolve(downloadURL);
-            }
+        const ref = storage.ref(`cvs/${candidatId}/${file.name}`);
+        const task = ref.put(file);
+        const container = document.getElementById("cv-progress-container");
+        const bar = document.getElementById("cv-progress-bar");
+        const text = document.getElementById("cv-progress-text");
+        container.classList.remove("hidden");
+        task.on("state_changed",
+            (s) => { const p = (s.bytesTransferred / s.totalBytes) * 100; bar.style.width = p + "%"; text.textContent = `Upload... ${Math.round(p)}%`; },
+            (e) => { container.classList.add("hidden"); reject(e); },
+            async () => { const url = await task.snapshot.ref.getDownloadURL(); text.textContent = "Terminé !"; setTimeout(() => container.classList.add("hidden"), 1500); resolve(url); }
         );
     });
 }
 
 // ============================================================
-// Formulaire d'inscription candidat
+// Inscription du jeune
 // ============================================================
 function setupFormHandler() {
     const form = document.getElementById("candidat-form");
     form.addEventListener("submit", async (e) => {
         e.preventDefault();
-
         const btn = document.getElementById("btn-inscrire");
         btn.disabled = true;
-        btn.innerHTML = `
-            <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
-            Inscription...
-        `;
+        btn.innerHTML = '<svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> Enregistrement...';
 
         const candidat = {
             nom: document.getElementById("nom").value.trim(),
@@ -265,55 +263,46 @@ function setupFormHandler() {
 
         try {
             const docRef = await db.collection("candidats").add(candidat);
-
             const cvFile = document.getElementById("cv-file").files[0];
             if (cvFile) {
                 const cvURL = await uploadCV(cvFile, docRef.id);
                 await db.collection("candidats").doc(docRef.id).update({ cvURL });
             }
-
             form.reset();
             document.getElementById("cv-placeholder").classList.remove("hidden");
             document.getElementById("cv-selected").classList.add("hidden");
-
             showSuccess("inscription-success");
             loadCandidats();
         } catch (error) {
-            console.error("Erreur lors de l'inscription :", error);
-            alert("Erreur lors de l'inscription. Vérifiez la console.");
+            console.error("Erreur :", error);
+            alert("Erreur lors de l'enregistrement.");
         } finally {
             btn.disabled = false;
-            btn.innerHTML = `
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
-                Inscrire le candidat
-            `;
+            btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg> Enregistrer le jeune';
         }
     });
 }
 
 // ============================================================
-// Chargement des candidats dans le sélecteur
+// Chargement des jeunes dans le sélecteur
 // ============================================================
 async function loadCandidats() {
     const select = document.getElementById("select-candidat");
-    select.innerHTML = '<option value="">-- Candidat --</option>';
-
+    select.innerHTML = '<option value="">-- Choisir un jeune --</option>';
     try {
-        const snapshot = await db.collection("candidats").orderBy("dateInscription", "desc").get();
-        snapshot.forEach(doc => {
+        const snap = await db.collection("candidats").orderBy("dateInscription", "desc").get();
+        snap.forEach(doc => {
             const c = doc.data();
-            const option = document.createElement("option");
-            option.value = doc.id;
-            option.textContent = `${c.prenom} ${c.nom}`;
-            select.appendChild(option);
+            const opt = document.createElement("option");
+            opt.value = doc.id;
+            opt.textContent = `${c.prenom} ${c.nom}`;
+            select.appendChild(opt);
         });
-    } catch (error) {
-        console.error("Erreur lors du chargement des candidats :", error);
-    }
+    } catch (err) { console.error("Erreur chargement :", err); }
 }
 
 // ============================================================
-// Sauvegarde de l'observation (notes sur 5)
+// Sauvegarde / mise à jour de l'observation
 // ============================================================
 function setupObservationHandlers() {
     document.getElementById("btn-save-observation").addEventListener("click", saveObservation);
@@ -322,27 +311,20 @@ function setupObservationHandlers() {
 
 async function saveObservation() {
     const candidatId = document.getElementById("select-candidat").value;
-    if (!candidatId) {
-        alert("Veuillez sélectionner un candidat.");
-        return;
-    }
-
+    if (!candidatId) { alert("Veuillez choisir un jeune."); return; }
     const hasScores = Object.values(scores).some(v => v > 0);
-    if (!hasScores) {
-        alert("Veuillez noter au moins une compétence.");
-        return;
-    }
+    if (!hasScores) { alert("Veuillez renseigner au moins une observation."); return; }
 
     const btn = document.getElementById("btn-save-observation");
     btn.disabled = true;
-    btn.innerHTML = `
-        <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
-        Sauvegarde...
-    `;
+    btn.innerHTML = '<svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> Enregistrement...';
+
+    const notesAnimateur = (document.getElementById("notes-animateur") || {}).value || "";
 
     const observation = {
-        candidatId: candidatId,
+        candidatId,
         scores: { ...scores },
+        notesAnimateur,
         dateObservation: firebase.firestore.FieldValue.serverTimestamp()
     };
 
@@ -350,28 +332,24 @@ async function saveObservation() {
         await db.collection("candidats").doc(candidatId).collection("observations").add(observation);
         await db.collection("candidats").doc(candidatId).update({
             dernieresNotes: { ...scores },
+            notesAnimateur,
             dateDerniereObservation: firebase.firestore.FieldValue.serverTimestamp()
         });
-
         showSuccess("observation-success");
-        resetScores();
     } catch (error) {
-        console.error("Erreur lors de la sauvegarde :", error);
-        alert("Erreur lors de la sauvegarde. Vérifiez la console.");
+        console.error("Erreur :", error);
+        alert("Erreur lors de l'enregistrement.");
     } finally {
         btn.disabled = false;
-        btn.innerHTML = `
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-            Sauvegarder l'observation
-        `;
+        btn.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Enregistrer l\'observation';
     }
 }
 
 // ============================================================
-// Utilitaire : afficher un message de succès
+// Utilitaire
 // ============================================================
-function showSuccess(elementId) {
-    const el = document.getElementById(elementId);
+function showSuccess(id) {
+    const el = document.getElementById(id);
     el.classList.remove("hidden");
-    setTimeout(() => el.classList.add("hidden"), 3000);
+    setTimeout(() => el.classList.add("hidden"), 4000);
 }
