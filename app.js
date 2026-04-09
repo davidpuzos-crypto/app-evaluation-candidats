@@ -20,20 +20,28 @@ const SAVOIR_ETRE = [
 
 const STAR_PATH = "M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z";
 
-// Labels qualitatifs bienveillants
 const LABELS_QUALITATIFS = [
-    "",                 // 0 = pas encore observé
-    "En émergence",     // 1
-    "En développement", // 2
-    "Observé",          // 3
-    "Bien observé",     // 4
-    "Point fort"        // 5
+    "",
+    "En émergence",
+    "En développement",
+    "Observé",
+    "Bien observé",
+    "Point fort ✦"
+];
+
+const QLABEL_CLASSES = [
+    "text-white/20",
+    "ql-1",
+    "ql-2",
+    "ql-3",
+    "ql-4",
+    "ql-5"
 ];
 
 let scores = {};
 
 // ============================================================
-// Initialisation
+// Init
 // ============================================================
 document.addEventListener("DOMContentLoaded", () => {
     initSkillsGrid();
@@ -43,113 +51,105 @@ document.addEventListener("DOMContentLoaded", () => {
     setupCvUpload();
     setupGuideToggle();
     setupCandidatChange();
+    updateProgress();
 });
 
 // ============================================================
 // Guide animateur (toggle)
 // ============================================================
 function setupGuideToggle() {
-    const btn = document.getElementById("guide-toggle");
-    const content = document.getElementById("guide-content");
+    const btn     = document.getElementById("guide-toggle");
+    const body    = document.getElementById("guide-body");
     const chevron = document.getElementById("guide-chevron");
     btn.addEventListener("click", () => {
-        content.classList.toggle("open");
-        chevron.style.transform = content.classList.contains("open") ? "rotate(180deg)" : "";
+        body.classList.toggle("open");
+        chevron.style.transform = body.classList.contains("open") ? "rotate(180deg)" : "";
     });
 }
 
 // ============================================================
-// Grille des compétences avec étoiles SVG
+// Grille des compétences
 // ============================================================
 function initSkillsGrid() {
     const grid = document.getElementById("skills-grid");
-    SAVOIR_ETRE.forEach(skill => {
+    SAVOIR_ETRE.forEach((skill, idx) => {
         scores[skill.nom] = 0;
 
         const row = document.createElement("div");
-        row.className = "skill-row flex items-center justify-between px-4 py-3";
+        row.className = "skill-row";
+        row.style.animationDelay = (idx * 0.03) + "s";
 
-        const label = document.createElement("div");
-        label.className = "flex items-center gap-2.5 min-w-0 flex-1";
-        label.innerHTML = `
-            <div class="w-7 h-7 rounded-lg bg-white/5 flex items-center justify-center flex-shrink-0">
-                <svg class="w-3.5 h-3.5 text-brand-400/70" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="${skill.icon}"/>
-                </svg>
+        row.innerHTML = `
+            <div class="flex items-center gap-2.5 min-w-0 flex-1">
+                <div class="w-7 h-7 rounded-lg bg-white/5 border border-white/5 flex items-center justify-center flex-shrink-0">
+                    <svg class="w-3.5 h-3.5 text-brand-400/60" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="${skill.icon}"/>
+                    </svg>
+                </div>
+                <div class="min-w-0">
+                    <span class="font-semibold text-white/80 text-[13px] block leading-tight">${skill.nom}</span>
+                    <span class="text-[10px] text-white/20 block mt-0.5 font-medium qualitative-label" data-qlabel="${skill.nom}">Pas encore observé</span>
+                </div>
             </div>
-            <div class="min-w-0">
-                <span class="font-medium text-white/80 text-[13px] block">${skill.nom}</span>
-                <span class="text-[10px] text-white/20 block mt-0.5 qualitative-label" data-qlabel="${skill.nom}">Pas encore observé</span>
-            </div>
+            <div class="flex items-center gap-0.5 flex-shrink-0 ml-3" data-stars="${skill.nom}"></div>
         `;
 
-        const ratingWrap = document.createElement("div");
-        ratingWrap.className = "flex items-center gap-1 flex-shrink-0";
-
+        const starsWrap = row.querySelector(`[data-stars="${skill.nom}"]`);
         for (let i = 1; i <= 5; i++) {
             const star = document.createElementNS("http://www.w3.org/2000/svg", "svg");
             star.setAttribute("viewBox", "0 0 24 24");
             star.setAttribute("class", "star-svg");
             star.setAttribute("data-skill", skill.nom);
             star.setAttribute("data-value", i);
-
             const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
             path.setAttribute("d", STAR_PATH);
             path.setAttribute("class", "star-path");
             path.setAttribute("stroke", "none");
             star.appendChild(path);
-
-            star.addEventListener("click", () => setRating(skill.nom, i));
+            star.addEventListener("click",      () => setRating(skill.nom, i));
             star.addEventListener("mouseenter", () => previewRating(skill.nom, i));
             star.addEventListener("mouseleave", () => restoreRating(skill.nom));
-            ratingWrap.appendChild(star);
+            starsWrap.appendChild(star);
         }
 
-        row.appendChild(label);
-        row.appendChild(ratingWrap);
         grid.appendChild(row);
     });
 }
 
 // ============================================================
-// Étoiles : interaction
+// Étoiles
 // ============================================================
 function setRating(skillName, value) {
     scores[skillName] = scores[skillName] === value ? 0 : value;
     updateStars(skillName, scores[skillName]);
     updateQualitativeLabel(skillName);
+    updateProgress();
 }
 
 function previewRating(skillName, value) {
-    document.querySelectorAll(`.star-svg[data-skill="${skillName}"]`).forEach(star => {
-        const v = parseInt(star.getAttribute("data-value"));
-        if (v <= value && !star.classList.contains("filled")) star.classList.add("preview");
+    document.querySelectorAll(`.star-svg[data-skill="${skillName}"]`).forEach(s => {
+        if (parseInt(s.getAttribute("data-value")) <= value && !s.classList.contains("filled"))
+            s.classList.add("preview");
     });
 }
 
 function restoreRating(skillName) {
-    document.querySelectorAll(`.star-svg[data-skill="${skillName}"]`).forEach(star => star.classList.remove("preview"));
+    document.querySelectorAll(`.star-svg[data-skill="${skillName}"]`).forEach(s => s.classList.remove("preview"));
 }
 
 function updateStars(skillName, value) {
-    document.querySelectorAll(`.star-svg[data-skill="${skillName}"]`).forEach(star => {
-        const v = parseInt(star.getAttribute("data-value"));
-        star.classList.toggle("filled", v <= value);
-        star.classList.remove("preview");
+    document.querySelectorAll(`.star-svg[data-skill="${skillName}"]`).forEach(s => {
+        const v = parseInt(s.getAttribute("data-value"));
+        s.classList.toggle("filled", v <= value);
+        s.classList.remove("preview");
     });
 }
 
 function updateQualitativeLabel(skillName) {
-    const el = document.querySelector(`[data-qlabel="${skillName}"]`);
+    const el  = document.querySelector(`[data-qlabel="${skillName}"]`);
     const val = scores[skillName];
-    if (val === 0) {
-        el.textContent = "Pas encore observé";
-        el.className = "text-[10px] text-white/20 block mt-0.5 qualitative-label";
-    } else {
-        el.textContent = LABELS_QUALITATIFS[val];
-        const colors = ["", "text-red-400/60", "text-orange-400/60", "text-yellow-400/60", "text-emerald-400/60", "text-emerald-300"];
-        el.className = `text-[10px] ${colors[val]} block mt-0.5 qualitative-label font-medium`;
-    }
+    el.textContent = val === 0 ? "Pas encore observé" : LABELS_QUALITATIFS[val];
+    el.className   = `text-[10px] block mt-0.5 font-medium qualitative-label ${QLABEL_CLASSES[val]}`;
 }
 
 function resetScores() {
@@ -160,25 +160,70 @@ function resetScores() {
     });
     const notes = document.getElementById("notes-animateur");
     if (notes) notes.value = "";
+    updateProgress();
 }
 
 // ============================================================
-// Chargement des observations existantes quand on change de jeune
+// Barre de progression
+// ============================================================
+function updateProgress() {
+    const observed = Object.values(scores).filter(v => v > 0).length;
+    const total    = SAVOIR_ETRE.length;
+    const pct      = Math.round((observed / total) * 100);
+
+    const bar   = document.getElementById("progress-bar");
+    const label = document.getElementById("progress-label");
+    if (bar)   bar.style.width = pct + "%";
+    if (label) label.textContent = `${observed} / ${total} observés`;
+}
+
+// ============================================================
+// Toast notifications
+// ============================================================
+function showToast(message, type = "success") {
+    const container = document.getElementById("toast-container");
+    const colors = {
+        success: "bg-emerald-500/90 border-emerald-400/40 text-white",
+        error:   "bg-red-500/90 border-red-400/40 text-white",
+        info:    "bg-brand-600/90 border-brand-400/40 text-white"
+    };
+    const icons = {
+        success: '<path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>',
+        error:   '<path stroke-linecap="round" stroke-linejoin="round" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/>',
+        info:    '<path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>'
+    };
+
+    const toast = document.createElement("div");
+    toast.className = `toast pointer-events-auto flex items-center gap-2.5 px-4 py-3 rounded-xl border backdrop-blur-sm shadow-lg text-sm font-medium max-w-[300px] ${colors[type]}`;
+    toast.innerHTML = `
+        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">${icons[type]}</svg>
+        <span>${message}</span>
+    `;
+    container.appendChild(toast);
+
+    setTimeout(() => {
+        toast.classList.add("hide");
+        setTimeout(() => toast.remove(), 350);
+    }, 3500);
+}
+
+// ============================================================
+// Chargement de l'observation existante
 // ============================================================
 function setupCandidatChange() {
     document.getElementById("select-candidat").addEventListener("change", loadExistingObservation);
 }
 
 async function loadExistingObservation() {
-    const candidatId = document.getElementById("select-candidat").value;
-    if (!candidatId) { resetScores(); return; }
+    const id = document.getElementById("select-candidat").value;
+    if (!id) { resetScores(); return; }
 
     try {
-        const obsSnap = await db.collection("candidats").doc(candidatId)
+        const snap = await db.collection("candidats").doc(id)
             .collection("observations").orderBy("dateObservation", "desc").limit(1).get();
 
-        if (!obsSnap.empty) {
-            const obs = obsSnap.docs[0].data();
+        if (!snap.empty) {
+            const obs = snap.docs[0].data();
             if (obs.scores) {
                 SAVOIR_ETRE.forEach(skill => {
                     scores[skill.nom] = obs.scores[skill.nom] || 0;
@@ -187,13 +232,14 @@ async function loadExistingObservation() {
                 });
             }
             const notes = document.getElementById("notes-animateur");
-            if (notes && obs.notesAnimateur) notes.value = obs.notesAnimateur;
-            else if (notes) notes.value = "";
+            if (notes) notes.value = obs.notesAnimateur || "";
+            updateProgress();
+            showToast("Observations précédentes chargées", "info");
         } else {
             resetScores();
         }
     } catch (err) {
-        console.error("Erreur chargement observation :", err);
+        console.error("Erreur chargement :", err);
         resetScores();
     }
 }
@@ -202,25 +248,36 @@ async function loadExistingObservation() {
 // Upload CV
 // ============================================================
 function setupCvUpload() {
-    const dropZone = document.getElementById("cv-drop-zone");
-    const fileInput = document.getElementById("cv-file");
+    const dropZone   = document.getElementById("cv-drop-zone");
+    const fileInput  = document.getElementById("cv-file");
     const placeholder = document.getElementById("cv-placeholder");
-    const selected = document.getElementById("cv-selected");
-    const filename = document.getElementById("cv-filename");
-    const removeBtn = document.getElementById("cv-remove");
+    const selected   = document.getElementById("cv-selected");
+    const filename   = document.getElementById("cv-filename");
+    const removeBtn  = document.getElementById("cv-remove");
 
-    dropZone.addEventListener("click", () => fileInput.click());
-    dropZone.addEventListener("dragover", (e) => { e.preventDefault(); dropZone.classList.add("dragover"); });
+    dropZone.addEventListener("click",     () => fileInput.click());
+    dropZone.addEventListener("dragover",  (e) => { e.preventDefault(); dropZone.classList.add("dragover"); });
     dropZone.addEventListener("dragleave", () => dropZone.classList.remove("dragover"));
     dropZone.addEventListener("drop", (e) => {
         e.preventDefault(); dropZone.classList.remove("dragover");
         const file = e.dataTransfer.files[0];
         if (file && file.type === "application/pdf") { fileInput.files = e.dataTransfer.files; showFile(file.name); }
-        else alert("Fichier PDF uniquement.");
+        else showToast("PDF uniquement", "error");
     });
     fileInput.addEventListener("change", () => { if (fileInput.files.length > 0) showFile(fileInput.files[0].name); });
-    removeBtn.addEventListener("click", (e) => { e.stopPropagation(); fileInput.value = ""; placeholder.classList.remove("hidden"); selected.classList.add("hidden"); });
-    function showFile(name) { filename.textContent = name; placeholder.classList.add("hidden"); selected.classList.remove("hidden"); }
+    removeBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        fileInput.value = "";
+        placeholder.classList.remove("hidden");
+        selected.classList.add("hidden");
+    });
+
+    function showFile(name) {
+        filename.textContent = name;
+        placeholder.classList.add("hidden");
+        selected.classList.remove("hidden");
+        selected.style.display = "flex";
+    }
 }
 
 function uploadCV(file, candidatId) {
@@ -228,13 +285,18 @@ function uploadCV(file, candidatId) {
         const ref = storage.ref(`cvs/${candidatId}/${file.name}`);
         const task = ref.put(file);
         const container = document.getElementById("cv-progress-container");
-        const bar = document.getElementById("cv-progress-bar");
+        const bar  = document.getElementById("cv-progress-bar");
         const text = document.getElementById("cv-progress-text");
         container.classList.remove("hidden");
         task.on("state_changed",
             (s) => { const p = (s.bytesTransferred / s.totalBytes) * 100; bar.style.width = p + "%"; text.textContent = `Upload... ${Math.round(p)}%`; },
             (e) => { container.classList.add("hidden"); reject(e); },
-            async () => { const url = await task.snapshot.ref.getDownloadURL(); text.textContent = "Terminé !"; setTimeout(() => container.classList.add("hidden"), 1500); resolve(url); }
+            async () => {
+                const url = await task.snapshot.ref.getDownloadURL();
+                text.textContent = "Terminé !";
+                setTimeout(() => container.classList.add("hidden"), 1500);
+                resolve(url);
+            }
         );
     });
 }
@@ -243,21 +305,20 @@ function uploadCV(file, candidatId) {
 // Inscription du jeune
 // ============================================================
 function setupFormHandler() {
-    const form = document.getElementById("candidat-form");
-    form.addEventListener("submit", async (e) => {
+    document.getElementById("candidat-form").addEventListener("submit", async (e) => {
         e.preventDefault();
         const btn = document.getElementById("btn-inscrire");
         btn.disabled = true;
         btn.innerHTML = '<svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> Enregistrement...';
 
         const candidat = {
-            nom: document.getElementById("nom").value.trim(),
-            prenom: document.getElementById("prenom").value.trim(),
-            email: document.getElementById("email").value.trim(),
-            linkedin: document.getElementById("linkedin").value.trim(),
-            profil_psy: document.getElementById("profilPsy").value,
+            nom:             document.getElementById("nom").value.trim(),
+            prenom:          document.getElementById("prenom").value.trim(),
+            email:           document.getElementById("email").value.trim(),
+            linkedin:        document.getElementById("linkedin").value.trim(),
+            profil_psy:      document.getElementById("profilPsy").value,
             personalityLink: document.getElementById("personality-link").value.trim(),
-            cvURL: null,
+            cvURL:           null,
             dateInscription: firebase.firestore.FieldValue.serverTimestamp()
         };
 
@@ -268,52 +329,56 @@ function setupFormHandler() {
                 const cvURL = await uploadCV(cvFile, docRef.id);
                 await db.collection("candidats").doc(docRef.id).update({ cvURL });
             }
-            form.reset();
+            document.getElementById("candidat-form").reset();
             document.getElementById("cv-placeholder").classList.remove("hidden");
             document.getElementById("cv-selected").classList.add("hidden");
-            showSuccess("inscription-success");
+            showToast(`${candidat.prenom} ${candidat.nom} enregistré(e) !`);
             loadCandidats();
-        } catch (error) {
-            console.error("Erreur :", error);
-            alert("Erreur lors de l'enregistrement.");
+        } catch (err) {
+            console.error("Erreur :", err);
+            showToast("Erreur lors de l'enregistrement", "error");
         } finally {
             btn.disabled = false;
-            btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg> Enregistrer le jeune';
+            btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg> Enregistrer le jeune';
         }
     });
 }
 
 // ============================================================
-// Chargement des jeunes dans le sélecteur
+// Chargement du sélecteur
 // ============================================================
 async function loadCandidats() {
     const select = document.getElementById("select-candidat");
-    select.innerHTML = '<option value="">-- Choisir un jeune --</option>';
+    const prev   = select.value;
+    select.innerHTML = '<option value="">— Choisir un jeune —</option>';
     try {
         const snap = await db.collection("candidats").orderBy("dateInscription", "desc").get();
         snap.forEach(doc => {
-            const c = doc.data();
+            const c   = doc.data();
             const opt = document.createElement("option");
             opt.value = doc.id;
             opt.textContent = `${c.prenom} ${c.nom}`;
             select.appendChild(opt);
         });
+        if (prev) select.value = prev;
     } catch (err) { console.error("Erreur chargement :", err); }
 }
 
 // ============================================================
-// Sauvegarde / mise à jour de l'observation
+// Sauvegarde de l'observation
 // ============================================================
 function setupObservationHandlers() {
     document.getElementById("btn-save-observation").addEventListener("click", saveObservation);
-    document.getElementById("btn-reset-scores").addEventListener("click", resetScores);
+    document.getElementById("btn-reset-scores").addEventListener("click", () => {
+        resetScores();
+        showToast("Observations réinitialisées", "info");
+    });
 }
 
 async function saveObservation() {
     const candidatId = document.getElementById("select-candidat").value;
-    if (!candidatId) { alert("Veuillez choisir un jeune."); return; }
-    const hasScores = Object.values(scores).some(v => v > 0);
-    if (!hasScores) { alert("Veuillez renseigner au moins une observation."); return; }
+    if (!candidatId) { showToast("Veuillez choisir un jeune", "error"); return; }
+    if (!Object.values(scores).some(v => v > 0)) { showToast("Veuillez renseigner au moins une observation", "error"); return; }
 
     const btn = document.getElementById("btn-save-observation");
     btn.disabled = true;
@@ -321,35 +386,24 @@ async function saveObservation() {
 
     const notesAnimateur = (document.getElementById("notes-animateur") || {}).value || "";
 
-    const observation = {
-        candidatId,
-        scores: { ...scores },
-        notesAnimateur,
-        dateObservation: firebase.firestore.FieldValue.serverTimestamp()
-    };
-
     try {
-        await db.collection("candidats").doc(candidatId).collection("observations").add(observation);
+        await db.collection("candidats").doc(candidatId).collection("observations").add({
+            candidatId,
+            scores: { ...scores },
+            notesAnimateur,
+            dateObservation: firebase.firestore.FieldValue.serverTimestamp()
+        });
         await db.collection("candidats").doc(candidatId).update({
             dernieresNotes: { ...scores },
             notesAnimateur,
             dateDerniereObservation: firebase.firestore.FieldValue.serverTimestamp()
         });
-        showSuccess("observation-success");
-    } catch (error) {
-        console.error("Erreur :", error);
-        alert("Erreur lors de l'enregistrement.");
+        showToast("Observation enregistrée ! Modifiable à tout moment.");
+    } catch (err) {
+        console.error("Erreur :", err);
+        showToast("Erreur lors de l'enregistrement", "error");
     } finally {
         btn.disabled = false;
-        btn.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Enregistrer l\'observation';
+        btn.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Enregistrer l\'observation';
     }
-}
-
-// ============================================================
-// Utilitaire
-// ============================================================
-function showSuccess(id) {
-    const el = document.getElementById(id);
-    el.classList.remove("hidden");
-    setTimeout(() => el.classList.add("hidden"), 4000);
 }

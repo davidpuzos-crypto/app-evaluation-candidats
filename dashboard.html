@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bilan d'orientation - SoftSkill Observer</title>
+    <title>Bilan d'orientation — SoftSkill Observer</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -15,142 +15,212 @@
         }
     </script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        * { box-sizing: border-box; }
         body { font-family: 'Inter', system-ui, sans-serif; }
-        .sidebar-item { transition: all 0.15s ease; }
-        .sidebar-item:hover { background-color: #f5f3ff; }
-        .sidebar-item.active { background-color: #ede9fe; border-left-color: #8b5cf6; }
-        .progress-fill { transition: width 0.7s ease; }
-        .custom-scroll::-webkit-scrollbar { width: 4px; }
-        .custom-scroll::-webkit-scrollbar-track { background: transparent; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #ddd6fe; border-radius: 9px; }
-        @media print { .no-print { display: none !important; } }
+
+        /* ── Animated bg ── */
+        @keyframes gradientShift { 0%{background-position:0% 50%;} 50%{background-position:100% 50%;} 100%{background-position:0% 50%;} }
+        .bg-animated { background:linear-gradient(135deg,#1a0533,#0f0a1a,#0d1a33,#1a1030,#0a0d20); background-size:400% 400%; animation:gradientShift 18s ease infinite; }
+        @keyframes float1{0%,100%{transform:translate(0,0);}50%{transform:translate(20px,-30px);}}
+        @keyframes float2{0%,100%{transform:translate(0,0);}50%{transform:translate(-15px,25px);}}
+        .orb1{animation:float1 14s ease-in-out infinite;}
+        .orb2{animation:float2 18s ease-in-out infinite;}
+
+        /* ── Glass ── */
+        .glass { background:rgba(255,255,255,0.05); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); }
+        .glass-card { background:rgba(255,255,255,0.05); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); border:1px solid rgba(255,255,255,0.08); transition:border-color 0.2s; }
+        .glass-card:hover { border-color:rgba(139,92,246,0.2); }
+        .glass-border { border:1px solid rgba(255,255,255,0.1); }
+
+        /* ── Sidebar item ── */
+        .sidebar-item { border-left:3px solid transparent; transition:all 0.15s ease; cursor:pointer; }
+        .sidebar-item:hover { background:rgba(139,92,246,0.08); border-left-color:rgba(139,92,246,0.4); }
+        .sidebar-item.active { background:rgba(139,92,246,0.15); border-left-color:#8b5cf6; }
+
+        /* ── Progress bar ── */
+        .progress-fill { transition:width 0.8s cubic-bezier(0.34,1.2,0.64,1); }
+
+        /* ── Scrollbar ── */
+        .custom-scroll::-webkit-scrollbar { width:4px; }
+        .custom-scroll::-webkit-scrollbar-track { background:transparent; }
+        .custom-scroll::-webkit-scrollbar-thumb { background:rgba(139,92,246,0.3); border-radius:9px; }
+
+        /* ── Print ── */
+        @media print {
+            .no-print { display:none !important; }
+            body { background:#fff !important; }
+            .glass-card, .glass { background:#fff !important; backdrop-filter:none !important; border:1px solid #e5e7eb !important; }
+        }
+
+        /* ── Gradient text ── */
+        .grad-text { background:linear-gradient(135deg,#c4b5fd,#8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+
+        /* ── Entry ── */
+        @keyframes fadeUp { from{opacity:0;transform:translateY(16px);} to{opacity:1;transform:translateY(0);} }
+        .fade-up { animation:fadeUp 0.45s ease forwards; }
+
+        /* ── Input ── */
+        .inp { background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:10px; color:#fff; padding:9px 12px 9px 36px; font-size:13px; outline:none; transition:border-color 0.15s, box-shadow 0.15s; }
+        .inp:focus { border-color:#8b5cf6; box-shadow:0 0 0 3px rgba(139,92,246,0.15); }
+        .inp::placeholder { color:rgba(255,255,255,0.25); }
+
+        /* ── Avatar initials ── */
+        .avatar { background:linear-gradient(135deg,#7c3aed,#4f46e5); color:#fff; font-weight:700; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0; }
     </style>
 </head>
-<body class="bg-gray-50 h-screen flex flex-col overflow-hidden">
+<body class="bg-animated h-screen flex flex-col overflow-hidden">
 
-    <!-- HEADER -->
-    <header class="bg-gradient-to-r from-brand-700 via-brand-600 to-indigo-600 text-white shadow-lg flex-shrink-0">
-        <div class="px-6 py-3 flex items-center justify-between">
+    <!-- Orbs -->
+    <div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
+        <div class="orb1 absolute top-[-10%] left-[-5%] w-[500px] h-[500px] rounded-full bg-brand-700/10 blur-[100px]"></div>
+        <div class="orb2 absolute bottom-[-15%] right-[-5%] w-[600px] h-[600px] rounded-full bg-indigo-700/10 blur-[120px]"></div>
+    </div>
+
+    <!-- ═══════════ HEADER ═══════════ -->
+    <header class="glass glass-border flex-shrink-0 z-50 shadow-xl shadow-black/20 relative">
+        <div class="px-6 py-3.5 flex items-center justify-between">
             <div class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-lg bg-white/15 flex items-center justify-center">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center shadow-lg shadow-brand-500/30 flex-shrink-0">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                 </div>
                 <div>
-                    <h1 class="text-lg font-bold tracking-tight">Bilan d'orientation</h1>
-                    <p class="text-[11px] text-white/60">Profil et pistes d'accompagnement du jeune</p>
+                    <h1 class="text-base font-bold text-white leading-tight tracking-tight">Bilan <span class="grad-text">d'orientation</span></h1>
+                    <p class="text-[10px] text-brand-300/60 font-medium">Profil et pistes d'accompagnement</p>
                 </div>
             </div>
-            <a href="index.html" class="no-print flex items-center gap-2 bg-white/10 hover:bg-white/20 border border-white/10 px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all">
+            <a href="index.html" class="no-print flex items-center gap-1.5 glass glass-border px-3.5 py-2 rounded-xl text-xs font-semibold text-white/70 hover:text-white hover:border-brand-500/40 transition-all">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 17l-5-5m0 0l5-5m-5 5h12"/></svg>
-                Session d'observation
+                Nouvelle observation
             </a>
         </div>
     </header>
 
-    <!-- LAYOUT -->
-    <div class="flex flex-1 overflow-hidden">
+    <!-- ═══════════ LAYOUT ═══════════ -->
+    <div class="flex flex-1 overflow-hidden relative z-10">
 
-        <!-- SIDEBAR -->
-        <aside class="w-1/4 min-w-[260px] max-w-[340px] bg-white border-r border-gray-200 flex flex-col no-print">
-            <div class="p-4 border-b border-gray-100">
-                <h2 class="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2.5">Jeunes accompagn&eacute;s</h2>
+        <!-- ── SIDEBAR ── -->
+        <aside class="no-print w-[280px] flex-shrink-0 flex flex-col glass glass-border border-r-0" style="border-right:1px solid rgba(255,255,255,0.08);">
+            <div class="px-4 pt-4 pb-3 border-b border-white/6">
+                <p class="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-3">Jeunes accompagnés</p>
                 <div class="relative">
-                    <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                    <input type="text" id="search-input" placeholder="Rechercher..." class="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand-300 focus:border-brand-400 outline-none">
+                    <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-white/25" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    <input type="text" id="search-input" placeholder="Rechercher..." class="inp w-full">
                 </div>
             </div>
-            <ul id="candidat-list" class="flex-1 overflow-y-auto custom-scroll">
-                <li class="p-8 text-center text-gray-300 text-sm">Chargement...</li>
+            <ul id="candidat-list" class="flex-1 overflow-y-auto custom-scroll py-1">
+                <li class="px-4 py-8 text-center text-white/25 text-sm">Chargement...</li>
             </ul>
-            <div class="p-2.5 border-t border-gray-100 text-center">
-                <span id="candidat-count" class="text-[11px] text-gray-400 font-medium">0 jeune(s)</span>
+            <div class="px-4 py-2.5 border-t border-white/6 text-center">
+                <span id="candidat-count" class="text-[11px] text-white/30 font-medium">0 jeune(s)</span>
             </div>
         </aside>
 
-        <!-- MAIN -->
-        <main class="flex-1 overflow-y-auto custom-scroll bg-gray-50 p-6">
+        <!-- ── MAIN ── -->
+        <main class="flex-1 overflow-y-auto custom-scroll p-6">
 
-            <!-- &Eacute;tat vide -->
-            <div id="empty-state" class="flex flex-col items-center justify-center h-full text-gray-300">
-                <svg class="w-16 h-16 mb-3" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-                <p class="text-lg font-semibold text-gray-400">S&eacute;lectionnez un jeune</p>
-                <p class="text-sm mt-1 text-gray-300">Cliquez sur un nom pour afficher son bilan d'orientation</p>
+            <!-- État vide -->
+            <div id="empty-state" class="flex flex-col items-center justify-center h-full text-center fade-up">
+                <div class="w-20 h-20 rounded-2xl glass glass-border flex items-center justify-center mb-4">
+                    <svg class="w-10 h-10 text-white/15" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                </div>
+                <p class="text-base font-bold text-white/50 mb-1">Sélectionnez un jeune</p>
+                <p class="text-sm text-white/25">Cliquez sur un nom dans la liste pour afficher son bilan</p>
             </div>
 
             <!-- Bilan -->
-            <div id="bilan-container" class="hidden max-w-4xl mx-auto">
+            <div id="bilan-container" class="hidden max-w-4xl mx-auto fade-up">
 
-                <!-- En-t&ecirc;te -->
-                <div class="bg-white rounded-2xl shadow-lg overflow-hidden mb-6">
-                    <div class="relative bg-gradient-to-r from-brand-600 to-indigo-600 text-white px-7 py-6">
-                        <button id="btn-export-pdf" class="no-print absolute top-4 right-5 flex items-center gap-1.5 bg-white/15 hover:bg-white/25 border border-white/20 px-3 py-1.5 rounded-lg text-xs font-medium transition-all">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17v3a2 2 0 002 2h14a2 2 0 002-2v-3"/></svg>
-                            T&eacute;l&eacute;charger le Bilan (PDF)
-                        </button>
-                        <h2 class="text-2xl font-extrabold"><span id="bilan-prenom"></span> <span id="bilan-nom"></span></h2>
-                        <div class="flex flex-wrap items-center gap-2 mt-3">
-                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/15 text-xs">
-                                <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-                                <span id="bilan-email"></span>
-                            </span>
-                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-400/20 text-amber-200 text-xs font-bold">
-                                <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
-                                <span id="bilan-profil-psy"></span>
-                            </span>
+                <!-- Carte identité -->
+                <div class="glass-card rounded-2xl overflow-hidden mb-6">
+                    <!-- Bandeau gradient -->
+                    <div class="relative bg-gradient-to-r from-brand-800/80 via-brand-700/60 to-indigo-800/60 px-7 py-6">
+                        <!-- Fond décoratif -->
+                        <div class="absolute inset-0 overflow-hidden">
+                            <div class="absolute -top-8 -right-8 w-40 h-40 rounded-full bg-white/3 blur-2xl"></div>
+                            <div class="absolute -bottom-4 left-20 w-28 h-28 rounded-full bg-brand-400/8 blur-xl"></div>
                         </div>
-                        <div class="flex flex-wrap gap-2 mt-3">
-                            <a id="btn-cv" href="#" target="_blank" class="hidden items-center gap-1.5 px-3 py-1.5 bg-white text-brand-700 rounded-lg text-xs font-semibold hover:bg-gray-100 transition-colors shadow-sm">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                                CV
-                            </a>
-                            <a id="btn-linkedin" href="#" target="_blank" class="hidden items-center gap-1.5 px-3 py-1.5 bg-white text-blue-700 rounded-lg text-xs font-semibold hover:bg-gray-100 transition-colors shadow-sm">
-                                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
-                                LinkedIn
-                            </a>
+                        <div class="relative">
+                            <button id="btn-export-pdf" class="no-print absolute top-0 right-0 flex items-center gap-1.5 glass glass-border px-3 py-1.5 rounded-lg text-xs font-semibold text-white/80 hover:text-white transition-all">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17v3a2 2 0 002 2h14a2 2 0 002-2v-3"/></svg>
+                                PDF
+                            </button>
+                            <h2 class="text-2xl font-extrabold text-white mb-2">
+                                <span id="bilan-prenom"></span> <span id="bilan-nom"></span>
+                            </h2>
+                            <div class="flex flex-wrap gap-2">
+                                <span class="inline-flex items-center gap-1.5 bg-white/10 px-2.5 py-1 rounded-full text-xs text-white/80">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                                    <span id="bilan-email"></span>
+                                </span>
+                                <span id="bilan-psy-badge" class="hidden inline-flex items-center gap-1.5 bg-amber-400/20 border border-amber-400/20 text-amber-300 px-2.5 py-1 rounded-full text-xs font-bold">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                                    <span id="bilan-profil-psy"></span>
+                                </span>
+                                <a id="btn-cv" href="#" target="_blank" class="hidden items-center gap-1.5 bg-emerald-500/20 border border-emerald-400/20 text-emerald-300 px-2.5 py-1 rounded-full text-xs font-semibold hover:bg-emerald-500/30 transition-colors">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                    CV PDF
+                                </a>
+                                <a id="btn-linkedin" href="#" target="_blank" class="hidden items-center gap-1.5 bg-blue-500/20 border border-blue-400/20 text-blue-300 px-2.5 py-1 rounded-full text-xs font-semibold hover:bg-blue-500/30 transition-colors">
+                                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                                    LinkedIn
+                                </a>
+                            </div>
                         </div>
                     </div>
 
                     <!-- Notes animateur -->
-                    <div id="notes-section" class="hidden px-7 py-4 bg-amber-50 border-t border-amber-100">
-                        <p class="text-xs font-semibold text-amber-700 mb-1">Notes de l'animateur</p>
-                        <p id="bilan-notes" class="text-sm text-amber-900/80 italic"></p>
+                    <div id="notes-section" class="hidden px-7 py-4 bg-amber-500/8 border-t border-amber-400/15">
+                        <div class="flex items-start gap-2.5">
+                            <svg class="w-4 h-4 text-amber-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                            <div>
+                                <p class="text-xs font-bold text-amber-400 mb-1">Notes de l'animateur</p>
+                                <p id="bilan-notes" class="text-sm text-amber-100/70 italic leading-relaxed"></p>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Grid 2 colonnes -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <!-- Grid radar + pistes -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">
 
                     <!-- Radar -->
-                    <div class="bg-white rounded-2xl shadow-lg p-6">
-                        <h3 class="text-sm font-bold text-gray-700 mb-4 flex items-center gap-2">
-                            <div class="w-7 h-7 rounded-lg bg-brand-50 flex items-center justify-center"><svg class="w-3.5 h-3.5 text-brand-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/></svg></div>
-                            Profil des savoir-&ecirc;tre observ&eacute;s
+                    <div class="glass-card rounded-2xl p-6">
+                        <h3 class="flex items-center gap-2.5 text-sm font-bold text-white/90 mb-4">
+                            <div class="w-7 h-7 rounded-lg bg-brand-500/15 flex items-center justify-center flex-shrink-0">
+                                <svg class="w-3.5 h-3.5 text-brand-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/></svg>
+                            </div>
+                            Profil des savoir-être observés
                         </h3>
-                        <div class="bg-gray-50 rounded-xl p-3 border border-gray-100">
+                        <div class="rounded-xl bg-white/3 border border-white/5 p-3">
                             <canvas id="radar-chart"></canvas>
                         </div>
-                        <p id="no-observation-msg" class="hidden text-center text-gray-300 text-xs py-6">Aucune observation enregistr&eacute;e pour l'instant.</p>
-                        <p class="text-[10px] text-gray-400 mt-3 text-center">Ces tendances sont observ&eacute;es lors d'une s&eacute;ance de jeu et ne constituent pas une &eacute;valuation d&eacute;finitive.</p>
+                        <p id="no-observation-msg" class="hidden text-center text-white/25 text-xs py-6">Aucune observation enregistrée pour l'instant.</p>
+                        <p class="text-[10px] text-white/25 mt-3 text-center">Ces tendances sont issues d'une séance de jeu — non d'une évaluation définitive.</p>
                     </div>
 
                     <!-- Pistes d'orientation -->
-                    <div class="bg-white rounded-2xl shadow-lg p-6">
-                        <h3 class="text-sm font-bold text-gray-700 mb-4 flex items-center gap-2">
-                            <div class="w-7 h-7 rounded-lg bg-brand-50 flex items-center justify-center"><svg class="w-3.5 h-3.5 text-brand-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l5.447 2.724A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg></div>
+                    <div class="glass-card rounded-2xl p-6">
+                        <h3 class="flex items-center gap-2.5 text-sm font-bold text-white/90 mb-1">
+                            <div class="w-7 h-7 rounded-lg bg-emerald-500/15 flex items-center justify-center flex-shrink-0">
+                                <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l5.447 2.724A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+                            </div>
                             Pistes d'orientation
                         </h3>
-                        <p class="text-[11px] text-gray-400 mb-4">Ces pistes sont des suggestions pour ouvrir la discussion, pas des verdicts.</p>
-                        <div id="secteurs-container" class="space-y-4">
-                            <!-- G&eacute;n&eacute;r&eacute; dynamiquement -->
+                        <p class="text-[11px] text-white/30 mb-4 ml-9">Suggestions pour ouvrir la discussion — pas des verdicts.</p>
+                        <div id="secteurs-container" class="space-y-3">
+                            <!-- Généré par dashboard.js -->
                         </div>
                     </div>
 
                 </div>
 
-                <!-- Disclaimer -->
-                <div class="bg-brand-50 border border-brand-100 rounded-xl px-5 py-3 mb-6">
-                    <p class="text-[11px] text-brand-700"><strong>Rappel :</strong> Ce bilan est un outil de m&eacute;diation. Les observations sont subjectives et li&eacute;es au contexte d'une s&eacute;ance de jeu. Elles servent de point de d&eacute;part pour accompagner le jeune dans son orientation, et peuvent &ecirc;tre ajust&eacute;es &agrave; tout moment.</p>
+                <!-- Disclaimer bienveillant -->
+                <div class="glass-card rounded-xl px-5 py-3.5 mb-4">
+                    <div class="flex items-start gap-3">
+                        <svg class="w-4 h-4 text-brand-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                        <p class="text-[11px] text-white/40 leading-relaxed"><strong class="text-white/60 font-semibold">Rappel :</strong> Ce bilan est un outil de médiation, pas de classement. Les observations sont subjectives, liées au contexte d'une séance de jeu. Elles servent de point de départ pour accompagner le jeune dans son orientation, et peuvent être ajustées à tout moment.</p>
+                    </div>
                 </div>
 
             </div>
@@ -158,9 +228,10 @@
 
     </div>
 
-    <!-- Firebase SDK -->
+    <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script src="firebase-config.js"></script>
     <script src="dashboard.js"></script>
 </body>
 </html>
