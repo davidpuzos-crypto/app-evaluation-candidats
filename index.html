@@ -356,6 +356,15 @@
                             </select>
                             <svg class="w-4 h-4 text-white/30 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
                         </div>
+                        <!-- Modifier la fiche -->
+                        <button id="btn-edit-candidat" title="Modifier la fiche du jeune" class="hidden w-10 h-10 flex-shrink-0 glass glass-border rounded-xl flex items-center justify-center text-amber-400/60 hover:text-amber-400 hover:border-amber-400/30 transition-all">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                        </button>
+                        <!-- Supprimer la fiche -->
+                        <button id="btn-delete-candidat" title="Supprimer ce jeune" class="hidden w-10 h-10 flex-shrink-0 glass glass-border rounded-xl flex items-center justify-center text-red-400/60 hover:text-red-400 hover:border-red-400/30 transition-all">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                        </button>
+                        <!-- Réinitialiser -->
                         <button id="btn-reset-scores" title="Réinitialiser les observations" class="w-10 h-10 flex-shrink-0 glass glass-border rounded-xl flex items-center justify-center text-white/30 hover:text-white hover:border-white/20 transition-all">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                         </button>
@@ -410,6 +419,74 @@
 
         </section>
     </main>
+
+    <!-- ═══════════ MODAL CONFIRMATION SUPPRESSION ═══════════ -->
+    <div id="modal-delete" class="fixed inset-0 z-[200] hidden items-center justify-center" style="background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);">
+        <div class="glass-card rounded-2xl p-6 max-w-sm mx-4 text-center" style="border-color:rgba(239,68,68,0.25);">
+            <div class="w-12 h-12 mx-auto mb-3 rounded-full bg-red-500/15 flex items-center justify-center">
+                <svg class="w-6 h-6 text-red-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            </div>
+            <h3 class="text-white font-bold text-base mb-1">Supprimer ce jeune ?</h3>
+            <p id="modal-delete-name" class="text-white/50 text-sm mb-1"></p>
+            <p class="text-white/30 text-xs mb-5">Cette action supprimera la fiche et toutes ses observations. Elle est irréversible.</p>
+            <div class="flex gap-3">
+                <button id="modal-cancel" class="flex-1 py-2.5 px-4 rounded-xl glass glass-border text-white/70 text-sm font-semibold hover:bg-white/10 transition-all">Annuler</button>
+                <button id="modal-confirm" class="flex-1 py-2.5 px-4 rounded-xl bg-red-500/80 hover:bg-red-500 text-white text-sm font-bold transition-all">Supprimer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════ MODAL MODIFICATION ═══════════ -->
+    <div id="modal-edit" class="fixed inset-0 z-[200] hidden items-center justify-center" style="background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);">
+        <div class="glass-card rounded-2xl p-6 w-full max-w-md mx-4">
+            <div class="flex items-center gap-3 mb-5">
+                <div class="w-10 h-10 rounded-xl bg-amber-400/15 flex items-center justify-center flex-shrink-0">
+                    <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                </div>
+                <div>
+                    <h3 class="text-white font-bold text-base">Modifier la fiche</h3>
+                    <p class="text-white/35 text-[11px]">Corrigez les informations du jeune</p>
+                </div>
+            </div>
+            <form id="edit-form" class="space-y-3">
+                <div class="grid grid-cols-2 gap-2.5">
+                    <div>
+                        <label class="block text-[11px] font-semibold text-white/40 mb-1.5 uppercase tracking-wider">Prénom</label>
+                        <input type="text" id="edit-prenom" required class="inp" placeholder="Prénom">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-semibold text-white/40 mb-1.5 uppercase tracking-wider">Nom</label>
+                        <input type="text" id="edit-nom" required class="inp" placeholder="Nom">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-semibold text-white/40 mb-1.5 uppercase tracking-wider">Email</label>
+                    <input type="email" id="edit-email" required class="inp" placeholder="email@exemple.com">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-semibold text-white/40 mb-1.5 uppercase tracking-wider">LinkedIn</label>
+                    <input type="url" id="edit-linkedin" class="inp" placeholder="https://linkedin.com/in/...">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-semibold text-white/40 mb-1.5 uppercase tracking-wider">16 Personalities</label>
+                    <div class="relative">
+                        <select id="edit-profilPsy" class="inp pr-8">
+                            <option value="" class="bg-[#1a0533]">— Type —</option>
+                            <optgroup label="Analystes" class="bg-[#1a0533]"><option value="INTJ">INTJ</option><option value="INTP">INTP</option><option value="ENTJ">ENTJ</option><option value="ENTP">ENTP</option></optgroup>
+                            <optgroup label="Diplomates" class="bg-[#1a0533]"><option value="INFJ">INFJ</option><option value="INFP">INFP</option><option value="ENFJ">ENFJ</option><option value="ENFP">ENFP</option></optgroup>
+                            <optgroup label="Sentinelles" class="bg-[#1a0533]"><option value="ISTJ">ISTJ</option><option value="ISFJ">ISFJ</option><option value="ESTJ">ESTJ</option><option value="ESFJ">ESFJ</option></optgroup>
+                            <optgroup label="Explorateurs" class="bg-[#1a0533]"><option value="ISTP">ISTP</option><option value="ISFP">ISFP</option><option value="ESTP">ESTP</option><option value="ESFP">ESFP</option></optgroup>
+                        </select>
+                        <svg class="w-4 h-4 text-white/30 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                    </div>
+                </div>
+                <div class="flex gap-3 pt-2">
+                    <button type="button" id="edit-cancel" class="flex-1 py-2.5 rounded-xl glass glass-border text-white/70 text-sm font-semibold hover:bg-white/10 transition-all">Annuler</button>
+                    <button type="submit" id="edit-save" class="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-white text-sm font-bold hover:shadow-lg hover:shadow-amber-500/30 transition-all">Enregistrer</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
