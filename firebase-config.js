@@ -10,13 +10,18 @@ const firebaseConfig = {
 };
 
 // Initialisation de Firebase
-firebase.initializeApp(firebaseConfig);
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
 
 // Initialisation de Firestore
 const db = firebase.firestore();
 
-// Initialisation de Firebase Storage
-const storage = firebase.storage();
+// Initialisation de Firebase Storage (si le SDK est chargé)
+let storage = null;
+if (typeof firebase.storage === "function") {
+    storage = firebase.storage();
+}
 
 // Initialisation d'Analytics (optionnel)
 if (typeof firebase.analytics === "function") {
