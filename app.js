@@ -39,6 +39,9 @@ const QLABEL_CLASSES = [
 ];
 
 let scores = {};
+let editingCandidatId = null;   // ID du jeune en cours de modification
+let deleteCandidatId  = null;   // ID du jeune à supprimer
+let candidatsCache    = [];     // cache local pour accès rapide
 
 // ============================================================
 // Init
@@ -51,6 +54,7 @@ document.addEventListener("DOMContentLoaded", () => {
     setupCvUpload();
     setupGuideToggle();
     setupCandidatChange();
+    setupEditDelete();
     updateProgress();
 });
 
@@ -211,7 +215,23 @@ function showToast(message, type = "success") {
 // Chargement de l'observation existante
 // ============================================================
 function setupCandidatChange() {
-    document.getElementById("select-candidat").addEventListener("change", loadExistingObservation);
+    document.getElementById("select-candidat").addEventListener("change", () => {
+        loadExistingObservation();
+        toggleEditDeleteButtons();
+    });
+}
+
+function toggleEditDeleteButtons() {
+    const id     = document.getElementById("select-candidat").value;
+    const btnEdit   = document.getElementById("btn-edit-candidat");
+    const btnDelete = document.getElementById("btn-delete-candidat");
+    if (id) {
+        btnEdit.classList.remove("hidden"); btnEdit.classList.add("flex");
+        btnDelete.classList.remove("hidden"); btnDelete.classList.add("flex");
+    } else {
+        btnEdit.classList.add("hidden"); btnEdit.classList.remove("flex");
+        btnDelete.classList.add("hidden"); btnDelete.classList.remove("flex");
+    }
 }
 
 async function loadExistingObservation() {
@@ -351,16 +371,19 @@ async function loadCandidats() {
     const select = document.getElementById("select-candidat");
     const prev   = select.value;
     select.innerHTML = '<option value="">— Choisir un jeune —</option>';
+    candidatsCache = [];
     try {
         const snap = await db.collection("candidats").orderBy("dateInscription", "desc").get();
         snap.forEach(doc => {
             const c   = doc.data();
+            candidatsCache.push({ id: doc.id, ...c });
             const opt = document.createElement("option");
             opt.value = doc.id;
             opt.textContent = `${c.prenom} ${c.nom}`;
             select.appendChild(opt);
         });
         if (prev) select.value = prev;
+        toggleEditDeleteButtons();
     } catch (err) { console.error("Erreur chargement :", err); }
 }
 
@@ -405,5 +428,139 @@ async function saveObservation() {
     } finally {
         btn.disabled = false;
         btn.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Enregistrer l\'observation';
+    }
+}
+
+// ============================================================
+// Modifier / Supprimer un jeune
+// ============================================================
+function setupEditDelete() {
+    // ── Bouton Modifier ──
+    document.getElementById("btn-edit-candidat").addEventListener("click", openEditModal);
+    document.getElementById("edit-cancel").addEventListener("click", closeEditModal);
+    document.getElementById("edit-form").addEventListener("submit", saveEdit);
+
+    // ── Bouton Supprimer ──
+    document.getElementById("btn-delete-candidat").addEventListener("click", openDeleteModal);
+    document.getElementById("modal-cancel").addEventListener("click", closeDeleteModal);
+    document.getElementById("modal-confirm").addEventListener("click", confirmDelete);
+
+    // Fermer les modals en cliquant à l'extérieur
+    document.getElementById("modal-delete").addEventListener("click", (e) => {
+        if (e.target === e.currentTarget) closeDeleteModal();
+    });
+    document.getElementById("modal-edit").addEventListener("click", (e) => {
+        if (e.target === e.currentTarget) closeEditModal();
+    });
+}
+
+// ── MODIFIER ──
+function openEditModal() {
+    const id = document.getElementById("select-candidat").value;
+    if (!id) return;
+    const c = candidatsCache.find(x => x.id === id);
+    if (!c) return;
+
+    editingCandidatId = id;
+    document.getElementById("edit-prenom").value    = c.prenom || "";
+    document.getElementById("edit-nom").value       = c.nom || "";
+    document.getElementById("edit-email").value     = c.email || "";
+    document.getElementById("edit-linkedin").value  = c.linkedin || "";
+    document.getElementById("edit-profilPsy").value = c.profil_psy || "";
+
+    const modal = document.getElementById("modal-edit");
+    modal.classList.remove("hidden");
+    modal.style.display = "flex";
+}
+
+function closeEditModal() {
+    const modal = document.getElementById("modal-edit");
+    modal.classList.add("hidden");
+    modal.style.display = "";
+    editingCandidatId = null;
+}
+
+async function saveEdit(e) {
+    e.preventDefault();
+    if (!editingCandidatId) return;
+
+    const btn = document.getElementById("edit-save");
+    btn.disabled = true;
+    btn.textContent = "Enregistrement...";
+
+    const updates = {
+        prenom:     document.getElementById("edit-prenom").value.trim(),
+        nom:        document.getElementById("edit-nom").value.trim(),
+        email:      document.getElementById("edit-email").value.trim(),
+        linkedin:   document.getElementById("edit-linkedin").value.trim(),
+        profil_psy: document.getElementById("edit-profilPsy").value
+    };
+
+    try {
+        await db.collection("candidats").doc(editingCandidatId).update(updates);
+        showToast(`Fiche de ${updates.prenom} ${updates.nom} mise à jour`);
+        closeEditModal();
+        await loadCandidats();
+    } catch (err) {
+        console.error("Erreur modification :", err);
+        showToast("Erreur lors de la modification", "error");
+    } finally {
+        btn.disabled = false;
+        btn.textContent = "Enregistrer";
+    }
+}
+
+// ── SUPPRIMER ──
+function openDeleteModal() {
+    const id = document.getElementById("select-candidat").value;
+    if (!id) return;
+    const c = candidatsCache.find(x => x.id === id);
+    if (!c) return;
+
+    deleteCandidatId = id;
+    document.getElementById("modal-delete-name").textContent = `${c.prenom} ${c.nom}`;
+
+    const modal = document.getElementById("modal-delete");
+    modal.classList.remove("hidden");
+    modal.style.display = "flex";
+}
+
+function closeDeleteModal() {
+    const modal = document.getElementById("modal-delete");
+    modal.classList.add("hidden");
+    modal.style.display = "";
+    deleteCandidatId = null;
+}
+
+async function confirmDelete() {
+    if (!deleteCandidatId) return;
+
+    const btn = document.getElementById("modal-confirm");
+    btn.disabled = true;
+    btn.textContent = "Suppression...";
+
+    try {
+        // Supprimer les observations (sous-collection)
+        const obsSnap = await db.collection("candidats").doc(deleteCandidatId)
+            .collection("observations").get();
+        const batch = db.batch();
+        obsSnap.forEach(doc => batch.delete(doc.ref));
+        await batch.commit();
+
+        // Supprimer le document principal
+        await db.collection("candidats").doc(deleteCandidatId).delete();
+
+        showToast("Jeune supprimé avec ses observations");
+        closeDeleteModal();
+        resetScores();
+        document.getElementById("select-candidat").value = "";
+        toggleEditDeleteButtons();
+        await loadCandidats();
+    } catch (err) {
+        console.error("Erreur suppression :", err);
+        showToast("Erreur lors de la suppression", "error");
+    } finally {
+        btn.disabled = false;
+        btn.textContent = "Supprimer";
     }
 }

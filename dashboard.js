@@ -1,19 +1,6 @@
 // ============================================================
-// Firebase init (via firebase-config.js)
+// Firebase est initialisé par firebase-config.js (db, storage)
 // ============================================================
-const firebaseConfig = {
-    apiKey: "AIzaSyBLMERKeQ9AnU4uRc2XRcWja7ZRqi7arNE",
-    authDomain: "app-evaluation-candidats.firebaseapp.com",
-    projectId: "app-evaluation-candidats",
-    storageBucket: "app-evaluation-candidats.firebasestorage.app",
-    messagingSenderId: "521001892400",
-    appId: "1:521001892400:web:YOUR_APP_ID",
-    measurementId: "G-XXXXXXXXXX"
-};
-
-// Guard against double-init if firebase-config.js already ran
-if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
 
 // ============================================================
 // Référentiel
