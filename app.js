@@ -302,6 +302,11 @@ function setupCvUpload() {
 
 function uploadCV(file, candidatId) {
     return new Promise((resolve, reject) => {
+        if (!storage) {
+            showToast("Firebase Storage non disponible — vérifiez votre configuration Firebase (appId)", "error");
+            reject(new Error("Storage non initialisé"));
+            return;
+        }
         const ref = storage.ref(`cvs/${candidatId}/${file.name}`);
         const task = ref.put(file);
         const container = document.getElementById("cv-progress-container");
@@ -310,7 +315,12 @@ function uploadCV(file, candidatId) {
         container.classList.remove("hidden");
         task.on("state_changed",
             (s) => { const p = (s.bytesTransferred / s.totalBytes) * 100; bar.style.width = p + "%"; text.textContent = `Upload... ${Math.round(p)}%`; },
-            (e) => { container.classList.add("hidden"); reject(e); },
+            (e) => {
+                container.classList.add("hidden");
+                console.error("Erreur upload CV :", e);
+                showToast("Erreur lors de l'upload du CV", "error");
+                reject(e);
+            },
             async () => {
                 const url = await task.snapshot.ref.getDownloadURL();
                 text.textContent = "Terminé !";
@@ -346,8 +356,13 @@ function setupFormHandler() {
             const docRef = await db.collection("candidats").add(candidat);
             const cvFile = document.getElementById("cv-file").files[0];
             if (cvFile) {
-                const cvURL = await uploadCV(cvFile, docRef.id);
-                await db.collection("candidats").doc(docRef.id).update({ cvURL });
+                try {
+                    const cvURL = await uploadCV(cvFile, docRef.id);
+                    await db.collection("candidats").doc(docRef.id).update({ cvURL });
+                } catch (cvErr) {
+                    console.error("Erreur upload CV :", cvErr);
+                    showToast(`${candidat.prenom} enregistré(e) mais le CV n'a pas pu être importé`, "error");
+                }
             }
             document.getElementById("candidat-form").reset();
             document.getElementById("cv-placeholder").classList.remove("hidden");
