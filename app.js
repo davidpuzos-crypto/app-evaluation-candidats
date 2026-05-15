@@ -51,7 +51,6 @@ document.addEventListener("DOMContentLoaded", () => {
     loadCandidats();
     setupFormHandler();
     setupObservationHandlers();
-    setupCvUpload();
     setupGuideToggle();
     setupCandidatChange();
     setupEditDelete();
@@ -265,73 +264,6 @@ async function loadExistingObservation() {
 }
 
 // ============================================================
-// Upload CV
-// ============================================================
-function setupCvUpload() {
-    const dropZone   = document.getElementById("cv-drop-zone");
-    const fileInput  = document.getElementById("cv-file");
-    const placeholder = document.getElementById("cv-placeholder");
-    const selected   = document.getElementById("cv-selected");
-    const filename   = document.getElementById("cv-filename");
-    const removeBtn  = document.getElementById("cv-remove");
-
-    dropZone.addEventListener("click",     () => fileInput.click());
-    dropZone.addEventListener("dragover",  (e) => { e.preventDefault(); dropZone.classList.add("dragover"); });
-    dropZone.addEventListener("dragleave", () => dropZone.classList.remove("dragover"));
-    dropZone.addEventListener("drop", (e) => {
-        e.preventDefault(); dropZone.classList.remove("dragover");
-        const file = e.dataTransfer.files[0];
-        if (file && file.type === "application/pdf") { fileInput.files = e.dataTransfer.files; showFile(file.name); }
-        else showToast("PDF uniquement", "error");
-    });
-    fileInput.addEventListener("change", () => { if (fileInput.files.length > 0) showFile(fileInput.files[0].name); });
-    removeBtn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        fileInput.value = "";
-        placeholder.classList.remove("hidden");
-        selected.classList.add("hidden");
-    });
-
-    function showFile(name) {
-        filename.textContent = name;
-        placeholder.classList.add("hidden");
-        selected.classList.remove("hidden");
-        selected.style.display = "flex";
-    }
-}
-
-function uploadCV(file, candidatId) {
-    return new Promise((resolve, reject) => {
-        if (!storage) {
-            showToast("Firebase Storage non disponible — vérifiez votre configuration Firebase (appId)", "error");
-            reject(new Error("Storage non initialisé"));
-            return;
-        }
-        const ref = storage.ref(`cvs/${candidatId}/${file.name}`);
-        const task = ref.put(file);
-        const container = document.getElementById("cv-progress-container");
-        const bar  = document.getElementById("cv-progress-bar");
-        const text = document.getElementById("cv-progress-text");
-        container.classList.remove("hidden");
-        task.on("state_changed",
-            (s) => { const p = (s.bytesTransferred / s.totalBytes) * 100; bar.style.width = p + "%"; text.textContent = `Upload... ${Math.round(p)}%`; },
-            (e) => {
-                container.classList.add("hidden");
-                console.error("Erreur upload CV :", e);
-                showToast("Erreur lors de l'upload du CV", "error");
-                reject(e);
-            },
-            async () => {
-                const url = await task.snapshot.ref.getDownloadURL();
-                text.textContent = "Terminé !";
-                setTimeout(() => container.classList.add("hidden"), 1500);
-                resolve(url);
-            }
-        );
-    });
-}
-
-// ============================================================
 // Inscription du jeune
 // ============================================================
 function setupFormHandler() {
@@ -348,25 +280,13 @@ function setupFormHandler() {
             linkedin:        document.getElementById("linkedin").value.trim(),
             profil_psy:      document.getElementById("profilPsy").value,
             personalityLink: document.getElementById("personality-link").value.trim(),
-            cvURL:           null,
+            cvURL:           document.getElementById("cvURL").value.trim() || null,
             dateInscription: firebase.firestore.FieldValue.serverTimestamp()
         };
 
         try {
-            const docRef = await db.collection("candidats").add(candidat);
-            const cvFile = document.getElementById("cv-file").files[0];
-            if (cvFile) {
-                try {
-                    const cvURL = await uploadCV(cvFile, docRef.id);
-                    await db.collection("candidats").doc(docRef.id).update({ cvURL });
-                } catch (cvErr) {
-                    console.error("Erreur upload CV :", cvErr);
-                    showToast(`${candidat.prenom} enregistré(e) mais le CV n'a pas pu être importé`, "error");
-                }
-            }
+            await db.collection("candidats").add(candidat);
             document.getElementById("candidat-form").reset();
-            document.getElementById("cv-placeholder").classList.remove("hidden");
-            document.getElementById("cv-selected").classList.add("hidden");
             showToast(`${candidat.prenom} ${candidat.nom} enregistré(e) !`);
             loadCandidats();
         } catch (err) {
@@ -482,6 +402,7 @@ function openEditModal() {
     document.getElementById("edit-email").value     = c.email || "";
     document.getElementById("edit-linkedin").value  = c.linkedin || "";
     document.getElementById("edit-profilPsy").value = c.profil_psy || "";
+    document.getElementById("edit-cvURL").value     = c.cvURL || "";
 
     const modal = document.getElementById("modal-edit");
     modal.classList.remove("hidden");
@@ -508,7 +429,8 @@ async function saveEdit(e) {
         nom:        document.getElementById("edit-nom").value.trim(),
         email:      document.getElementById("edit-email").value.trim(),
         linkedin:   document.getElementById("edit-linkedin").value.trim(),
-        profil_psy: document.getElementById("edit-profilPsy").value
+        profil_psy: document.getElementById("edit-profilPsy").value,
+        cvURL:      document.getElementById("edit-cvURL").value.trim() || null
     };
 
     try {
