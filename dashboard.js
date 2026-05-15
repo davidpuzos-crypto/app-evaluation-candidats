@@ -371,14 +371,16 @@ function renderSecteurs(scores) {
 function setupExportPDF() {
     document.getElementById("btn-export-pdf").addEventListener("click", () => {
         if (!selectedCandidat) return;
+        console.log("[PDF-v5] Export lancé — jsPDF direct");
         try {
             generatePDF(selectedCandidat, currentScores, currentNotes);
         } catch (err) {
-            console.error("Erreur export PDF :", err);
-            alert("Erreur lors de la génération du PDF. Vérifiez la console.");
+            console.error("[PDF-v5] Erreur export :", err);
+            alert("Erreur PDF : " + err.message);
         }
     });
 }
+console.log("[PDF-v5] dashboard.js chargé — version jsPDF directe");
 
 // Nettoie une chaîne pour la police Helvetica de jsPDF (WinAnsi/Latin-1)
 function cleanText(s) {
