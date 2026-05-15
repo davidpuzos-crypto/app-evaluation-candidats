@@ -359,7 +359,7 @@ function renderSecteurs(scores) {
 }
 
 // ============================================================
-// Export PDF
+// Export PDF — styles inline pour html2canvas
 // ============================================================
 function setupExportPDF() {
     document.getElementById("btn-export-pdf").addEventListener("click", async () => {
@@ -368,21 +368,24 @@ function setupExportPDF() {
         const btn = document.getElementById("btn-export-pdf");
         btn.style.display = "none";
 
-        el.classList.add("pdf-mode");
+        const saved = applyPdfStyles();
 
         if (radarChart) {
             radarChart.options.scales.r.pointLabels.color = "#374151";
+            radarChart.options.scales.r.pointLabels.font.size = 10;
             radarChart.options.scales.r.ticks.color = "#6b7280";
-            radarChart.options.scales.r.grid.color = "rgba(0,0,0,0.12)";
-            radarChart.options.scales.r.angleLines.color = "rgba(0,0,0,0.12)";
-            radarChart.data.datasets[0].borderColor = "rgba(124,58,237,0.9)";
-            radarChart.data.datasets[0].backgroundColor = "rgba(139,92,246,0.25)";
+            radarChart.options.scales.r.grid.color = "rgba(0,0,0,0.15)";
+            radarChart.options.scales.r.angleLines.color = "rgba(0,0,0,0.15)";
+            radarChart.data.datasets[0].borderColor = "#7c3aed";
+            radarChart.data.datasets[0].borderWidth = 3;
+            radarChart.data.datasets[0].backgroundColor = "rgba(124,58,237,0.3)";
             radarChart.data.datasets[0].pointBackgroundColor = "#6d28d9";
             radarChart.data.datasets[0].pointRadius = 5;
+            radarChart.data.datasets[0].pointBorderWidth = 2;
             radarChart.update("none");
         }
 
-        await new Promise(r => setTimeout(r, 100));
+        await new Promise(r => setTimeout(r, 150));
 
         try {
             await html2pdf().set({
@@ -393,20 +396,140 @@ function setupExportPDF() {
                 jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
             }).from(el).save();
         } finally {
-            el.classList.remove("pdf-mode");
+            restorePdfStyles(saved);
             btn.style.display = "";
 
             if (radarChart) {
                 radarChart.options.scales.r.pointLabels.color = "#6b7280";
+                radarChart.options.scales.r.pointLabels.font.size = 9;
                 radarChart.options.scales.r.ticks.color = "#9ca3af";
                 radarChart.options.scales.r.grid.color = "rgba(0,0,0,0.06)";
                 radarChart.options.scales.r.angleLines.color = "rgba(0,0,0,0.06)";
                 radarChart.data.datasets[0].borderColor = "rgba(124,58,237,0.6)";
+                radarChart.data.datasets[0].borderWidth = 2;
                 radarChart.data.datasets[0].backgroundColor = "rgba(139,92,246,0.12)";
                 radarChart.data.datasets[0].pointBackgroundColor = "#7c3aed";
                 radarChart.data.datasets[0].pointRadius = 4;
+                radarChart.data.datasets[0].pointBorderWidth = 1.5;
                 radarChart.update("none");
             }
         }
     });
+}
+
+function applyPdfStyles() {
+    const saved = [];
+
+    function save(el, styles) {
+        saved.push({ el, orig: el.style.cssText });
+        Object.entries(styles).forEach(([k, v]) => el.style.setProperty(k, v, "important"));
+    }
+
+    // Header gradient → solid purple
+    const header = document.querySelector(".pdf-header");
+    if (header) {
+        save(header, {
+            "background": "#4c1d95",
+            "background-image": "none"
+        });
+        header.querySelectorAll("*").forEach(child => {
+            if (child.id === "btn-export-pdf") return;
+            const tag = child.tagName.toLowerCase();
+            if (tag === "span" || tag === "h2" || tag === "svg" || tag === "path" || tag === "p" || tag === "a") {
+                save(child, { "color": "#ffffff", "-webkit-text-fill-color": "#ffffff", "opacity": "1" });
+            }
+        });
+    }
+
+    // Email badge
+    const emailBadge = document.querySelector(".pdf-badge-email");
+    if (emailBadge) save(emailBadge, { "background-color": "rgba(255,255,255,0.25)" });
+
+    // Psy badge
+    const psyBadge = document.querySelector(".pdf-badge-psy");
+    if (psyBadge && !psyBadge.classList.contains("hidden")) {
+        save(psyBadge, { "background-color": "#d97706", "color": "#ffffff", "-webkit-text-fill-color": "#ffffff" });
+        psyBadge.querySelectorAll("*").forEach(c => save(c, { "color": "#ffffff", "-webkit-text-fill-color": "#ffffff" }));
+    }
+
+    // CV & LinkedIn badges
+    const cvBadge = document.querySelector(".pdf-badge-cv");
+    if (cvBadge && !cvBadge.classList.contains("hidden")) {
+        save(cvBadge, { "background-color": "#ffffff", "color": "#4c1d95", "-webkit-text-fill-color": "#4c1d95" });
+    }
+    const liBadge = document.querySelector(".pdf-badge-li");
+    if (liBadge && !liBadge.classList.contains("hidden")) {
+        save(liBadge, { "background-color": "#ffffff", "color": "#1d4ed8", "-webkit-text-fill-color": "#1d4ed8" });
+    }
+
+    // Notes animateur
+    const notes = document.querySelector(".pdf-notes");
+    if (notes && !notes.classList.contains("hidden")) {
+        save(notes, { "background-color": "#fffbeb", "border-color": "#f59e0b" });
+        notes.querySelectorAll("p, span").forEach(c => {
+            save(c, { "color": "#78350f", "-webkit-text-fill-color": "#78350f", "opacity": "1" });
+        });
+    }
+
+    // Section titles
+    document.querySelectorAll(".pdf-section-title").forEach(h => {
+        save(h, { "color": "#1f2937", "-webkit-text-fill-color": "#1f2937" });
+    });
+
+    // Subtitle
+    const sub = document.querySelector(".pdf-subtitle");
+    if (sub) save(sub, { "color": "#6b7280", "-webkit-text-fill-color": "#6b7280" });
+
+    // Sector cards
+    document.querySelectorAll("#secteurs-container > div").forEach(card => {
+        save(card, { "opacity": "1", "animation": "none" });
+        card.querySelectorAll(".font-bold.text-gray-700").forEach(t =>
+            save(t, { "color": "#1f2937", "-webkit-text-fill-color": "#1f2937" })
+        );
+        card.querySelectorAll(".text-gray-400").forEach(t =>
+            save(t, { "color": "#6b7280", "-webkit-text-fill-color": "#6b7280" })
+        );
+        card.querySelectorAll(".text-emerald-700").forEach(t =>
+            save(t, { "color": "#047857", "-webkit-text-fill-color": "#047857" })
+        );
+        card.querySelectorAll(".text-amber-700").forEach(t =>
+            save(t, { "color": "#b45309", "-webkit-text-fill-color": "#b45309" })
+        );
+        card.querySelectorAll(".text-gray-500").forEach(t =>
+            save(t, { "color": "#374151", "-webkit-text-fill-color": "#374151" })
+        );
+        card.querySelectorAll(".bg-emerald-500").forEach(bar =>
+            save(bar, { "background-color": "#10b981" })
+        );
+        card.querySelectorAll(".bg-amber-500").forEach(bar =>
+            save(bar, { "background-color": "#f59e0b" })
+        );
+        card.querySelectorAll(".bg-gray-400").forEach(bar =>
+            save(bar, { "background-color": "#9ca3af" })
+        );
+        card.querySelectorAll(".bg-emerald-50").forEach(c =>
+            save(c, { "background-color": "#ecfdf5" })
+        );
+        card.querySelectorAll(".bg-amber-50").forEach(c =>
+            save(c, { "background-color": "#fffbeb" })
+        );
+        card.querySelectorAll(".bg-gray-50").forEach(c =>
+            save(c, { "background-color": "#f9fafb" })
+        );
+    });
+
+    // Disclaimer
+    const disc = document.querySelector(".pdf-disclaimer");
+    if (disc) {
+        save(disc, { "background-color": "#f5f3ff", "border-color": "#c4b5fd" });
+        disc.querySelectorAll("p, strong").forEach(c =>
+            save(c, { "color": "#5b21b6", "-webkit-text-fill-color": "#5b21b6", "opacity": "1" })
+        );
+    }
+
+    return saved;
+}
+
+function restorePdfStyles(saved) {
+    saved.forEach(({ el, orig }) => { el.style.cssText = orig; });
 }
