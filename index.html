@@ -62,33 +62,55 @@
             box-shadow: 0 0 30px rgba(139,92,246,0.1);
         }
 
-        /* ── Stars ── */
-        .star-svg { width:30px; height:30px; cursor:pointer; transition:transform 0.1s ease; -webkit-tap-highlight-color:transparent; }
-        .star-svg:hover { transform:scale(1.3); }
+        /* ── Stars (optimisées tablette) ── */
+        .star-svg {
+            width:38px; height:38px; cursor:pointer;
+            padding:3px; /* zone de tap élargie sans agrandir le visuel */
+            transition:transform 0.1s ease; -webkit-tap-highlight-color:transparent;
+            touch-action:manipulation;
+        }
+        .star-svg:hover { transform:scale(1.18); }
         .star-svg:active { transform:scale(0.9); }
         .star-svg .star-path { fill:#4a3a6e; transition:fill 0.12s ease; }
-        .star-svg.filled .star-path { fill:#facc15; filter:drop-shadow(0 0 6px rgba(250,204,21,0.5)); }
+        .star-svg.filled .star-path { fill:#facc15; filter:drop-shadow(0 0 8px rgba(250,204,21,0.55)); }
         .star-svg.preview .star-path { fill:#facc15; opacity:0.35; }
 
-        /* ── Inputs ── */
+        /* ── Inputs (plus confortables sur tablette) ── */
         .inp {
-            width:100%; padding:10px 12px; border-radius:10px;
+            width:100%; padding:11px 13px; border-radius:10px;
             background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.15);
-            color:#fff; font-size:13px; outline:none;
+            color:#fff; font-size:14px; outline:none;
             transition:border-color 0.15s, box-shadow 0.15s, background 0.15s;
         }
         .inp::placeholder { color:rgba(255,255,255,0.30); }
         .inp:focus { border-color:#8b5cf6; background:rgba(139,92,246,0.08); box-shadow:0 0 0 3px rgba(139,92,246,0.15); }
         select.inp { appearance:none; }
 
-        /* ── Skill rows ── */
+        /* ── Skill rows (espacement tablette) ── */
         .skill-row {
             display:flex; align-items:center; justify-content:space-between;
-            padding:10px 16px; transition:background 0.15s;
+            padding:14px 18px; transition:background 0.15s;
             border-bottom:1px solid rgba(255,255,255,0.08);
         }
         .skill-row:last-child { border-bottom:none; }
         .skill-row:hover { background:rgba(139,92,246,0.07); }
+        .skill-row:active { background:rgba(139,92,246,0.12); }
+
+        /* ── Boutons icône (cible tactile ≥ 44px) ── */
+        .icon-btn-touch {
+            min-width:44px; min-height:44px;
+            touch-action:manipulation;
+        }
+
+        /* ── Footer Tisselia ── */
+        .tisselia-footer {
+            background: rgba(255,255,255,0.04);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-top: 1px solid rgba(255,255,255,0.08);
+        }
+        .tisselia-logo { height:36px; width:auto; opacity:0.92; transition:opacity 0.2s; }
+        .tisselia-logo:hover { opacity:1; }
 
         /* ── Progress ring ── */
         .progress-track { background:rgba(255,255,255,0.12); border-radius:9999px; height:5px; overflow:hidden; }
@@ -308,8 +330,8 @@
             </div>
 
             <!-- Bouton inscrire -->
-            <button type="submit" form="candidat-form" id="btn-inscrire" class="btn-inscr w-full text-white py-3 px-6 rounded-xl font-bold flex items-center justify-center gap-2 text-sm">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+            <button type="submit" form="candidat-form" id="btn-inscrire" class="btn-inscr w-full text-white py-3.5 px-6 rounded-xl font-bold flex items-center justify-center gap-2 text-[15px]" style="min-height:50px;">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
                 Enregistrer le jeune
             </button>
 
@@ -331,23 +353,23 @@
                         </div>
                     </div>
                     <div class="flex items-center gap-2 flex-shrink-0">
-                        <div class="relative min-w-[190px]">
-                            <select id="select-candidat" class="inp pr-8 py-2.5">
+                        <div class="relative min-w-[220px]">
+                            <select id="select-candidat" class="inp pr-9" style="min-height:44px;font-size:14px;">
                                 <option value="">— Choisir un jeune —</option>
                             </select>
-                            <svg class="w-4 h-4 text-white/30 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                            <svg class="w-4 h-4 text-white/45 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
                         </div>
                         <!-- Modifier la fiche -->
-                        <button id="btn-edit-candidat" title="Modifier la fiche du jeune" class="hidden w-10 h-10 flex-shrink-0 glass glass-border rounded-xl flex items-center justify-center text-amber-400/60 hover:text-amber-400 hover:border-amber-400/30 transition-all">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                        <button id="btn-edit-candidat" title="Modifier la fiche du jeune" class="hidden icon-btn-touch flex-shrink-0 glass glass-border rounded-xl flex items-center justify-center text-amber-400/70 hover:text-amber-400 hover:border-amber-400/30 transition-all">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                         </button>
                         <!-- Supprimer la fiche -->
-                        <button id="btn-delete-candidat" title="Supprimer ce jeune" class="hidden w-10 h-10 flex-shrink-0 glass glass-border rounded-xl flex items-center justify-center text-red-400/60 hover:text-red-400 hover:border-red-400/30 transition-all">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                        <button id="btn-delete-candidat" title="Supprimer ce jeune" class="hidden icon-btn-touch flex-shrink-0 glass glass-border rounded-xl flex items-center justify-center text-red-400/70 hover:text-red-400 hover:border-red-400/30 transition-all">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                         </button>
                         <!-- Réinitialiser -->
-                        <button id="btn-reset-scores" title="Réinitialiser les observations" class="w-10 h-10 flex-shrink-0 glass glass-border rounded-xl flex items-center justify-center text-white/45 hover:text-white hover:border-white/25 transition-all">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                        <button id="btn-reset-scores" title="Réinitialiser les observations" class="icon-btn-touch flex-shrink-0 glass glass-border rounded-xl flex items-center justify-center text-white/55 hover:text-white hover:border-white/25 transition-all">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                         </button>
                     </div>
                 </div>
@@ -363,19 +385,19 @@
                         <div id="progress-bar" class="progress-fill" style="width:0%"></div>
                     </div>
                     <!-- Légende colorée -->
-                    <div class="flex flex-wrap items-center gap-x-3 gap-y-1.5">
-                        <span class="text-[10px] text-white/40 font-semibold uppercase tracking-wider mr-1">Légende :</span>
-                        <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-red-400 inline-block"></span><span class="text-[10px] text-white/55">1 = En émergence</span></span>
-                        <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-orange-400 inline-block"></span><span class="text-[10px] text-white/55">2 = En développement</span></span>
-                        <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-yellow-400 inline-block"></span><span class="text-[10px] text-white/55">3 = Observé</span></span>
-                        <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span><span class="text-[10px] text-white/55">4 = Bien observé</span></span>
-                        <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-violet-400 inline-block"></span><span class="text-[10px] text-white/55">5 = Point fort</span></span>
+                    <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
+                        <span class="text-[11px] text-white/55 font-semibold uppercase tracking-wider mr-1">Légende :</span>
+                        <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-red-400 inline-block"></span><span class="text-[12px] text-white/70 font-medium">1 — En émergence</span></span>
+                        <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-orange-400 inline-block"></span><span class="text-[12px] text-white/70 font-medium">2 — En développement</span></span>
+                        <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-yellow-400 inline-block"></span><span class="text-[12px] text-white/70 font-medium">3 — Observé</span></span>
+                        <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-400 inline-block"></span><span class="text-[12px] text-white/70 font-medium">4 — Bien observé</span></span>
+                        <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-violet-400 inline-block"></span><span class="text-[12px] text-white/70 font-medium">5 — Point fort</span></span>
                     </div>
                 </div>
             </div>
 
             <!-- Grille des compétences -->
-            <div class="flex-1 overflow-y-auto custom-scroll rounded-2xl glass-card mb-4" style="max-height: 440px;">
+            <div class="flex-1 overflow-y-auto custom-scroll rounded-2xl glass-card mb-4" style="max-height: 560px;">
                 <div id="skills-grid" class="divide-y divide-white/8">
                     <!-- Généré par app.js -->
                 </div>
@@ -392,7 +414,7 @@
 
             <!-- Bouton sauvegarder -->
             <div class="sticky bottom-0 z-10">
-                <button id="btn-save-observation" class="btn-save w-full text-white py-3.5 px-6 rounded-xl font-bold flex items-center justify-center gap-2 text-sm">
+                <button id="btn-save-observation" class="btn-save w-full text-white py-4 px-6 rounded-xl font-bold flex items-center justify-center gap-2 text-[15px]" style="min-height:54px;">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
                     Enregistrer l'observation
                 </button>
@@ -473,12 +495,26 @@
         </div>
     </div>
 
+    <!-- ═══════════ FOOTER TISSELIA ═══════════ -->
+    <footer class="tisselia-footer relative z-10 mt-6">
+        <div class="max-w-screen-2xl mx-auto px-5 py-5 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 text-center">
+            <a href="https://tisselia.com" target="_blank" rel="noopener" class="flex items-center gap-3 group">
+                <img src="https://tisselia.com/wp-content/uploads/2026/01/cropped-logo.png" alt="Tisselia" class="tisselia-logo">
+            </a>
+            <div class="text-[12px] sm:text-[13px] text-white/65 leading-relaxed">
+                Outil développé par <a href="https://tisselia.com" target="_blank" rel="noopener" class="font-semibold text-white/90 hover:text-brand-300 transition-colors">Tisselia</a>
+                <span class="text-white/40 mx-1.5">·</span>
+                en partenariat avec <span class="font-semibold text-white/90">Info Jeunes Val d'Oise</span>
+            </div>
+        </div>
+    </footer>
+
     <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics-compat.js"></script>
-    <script src="firebase-config.js?v=20260515"></script>
-    <script src="app.js?v=20260515"></script>
+    <script src="firebase-config.js?v=20260515b"></script>
+    <script src="app.js?v=20260515b"></script>
 </body>
 </html>
