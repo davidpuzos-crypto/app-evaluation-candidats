@@ -50,6 +50,8 @@ const SECTEURS = [
 let allCandidats  = [];
 let radarChart    = null;
 let selectedCandidat = null;
+let currentScores = null;
+let currentNotes  = "";
 
 // ============================================================
 // Init
@@ -154,6 +156,9 @@ async function selectCandidat(id, liEl) {
 
     if (!scores && candidat.dernieresNotes) scores = candidat.dernieresNotes;
     if (!notesAnimateur && candidat.notesAnimateur) notesAnimateur = candidat.notesAnimateur;
+
+    currentScores = scores;
+    currentNotes  = notesAnimateur;
 
     renderBilan(candidat, scores, notesAnimateur);
 }
@@ -359,156 +364,326 @@ function renderSecteurs(scores) {
 }
 
 // ============================================================
-// Export PDF — utilise onclone pour modifier le clone html2canvas
+// Export PDF — génération directe avec jsPDF
+// Aucun html2canvas : on dessine chaque élément à la main
+// pour garantir des couleurs solides et contrastées.
 // ============================================================
 function setupExportPDF() {
-    document.getElementById("btn-export-pdf").addEventListener("click", async () => {
+    document.getElementById("btn-export-pdf").addEventListener("click", () => {
         if (!selectedCandidat) return;
-        const el  = document.getElementById("bilan-container");
-        const btn = document.getElementById("btn-export-pdf");
-        btn.style.display = "none";
-
-        if (radarChart) {
-            radarChart.options.scales.r.pointLabels.color = "#374151";
-            radarChart.options.scales.r.pointLabels.font.size = 10;
-            radarChart.options.scales.r.ticks.color = "#6b7280";
-            radarChart.options.scales.r.grid.color = "rgba(0,0,0,0.15)";
-            radarChart.options.scales.r.angleLines.color = "rgba(0,0,0,0.15)";
-            radarChart.data.datasets[0].borderColor = "#7c3aed";
-            radarChart.data.datasets[0].borderWidth = 3;
-            radarChart.data.datasets[0].backgroundColor = "rgba(124,58,237,0.3)";
-            radarChart.data.datasets[0].pointBackgroundColor = "#6d28d9";
-            radarChart.data.datasets[0].pointRadius = 5;
-            radarChart.data.datasets[0].pointBorderWidth = 2;
-            radarChart.update("none");
-        }
-
-        await new Promise(r => setTimeout(r, 200));
-
         try {
-            await html2pdf().set({
-                margin: 10,
-                filename: `Bilan_${selectedCandidat.prenom||""}_${selectedCandidat.nom||""}.pdf`,
-                image: { type: "png", quality: 1.0 },
-                html2canvas: {
-                    scale: 2,
-                    useCORS: true,
-                    backgroundColor: "#ffffff",
-                    logging: false,
-                    onclone: function(clonedDoc) {
-                        applyPdfStylesToClone(clonedDoc);
-                    }
-                },
-                jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
-            }).from(el).save();
-        } finally {
-            btn.style.display = "";
-
-            if (radarChart) {
-                radarChart.options.scales.r.pointLabels.color = "#6b7280";
-                radarChart.options.scales.r.pointLabels.font.size = 9;
-                radarChart.options.scales.r.ticks.color = "#9ca3af";
-                radarChart.options.scales.r.grid.color = "rgba(0,0,0,0.06)";
-                radarChart.options.scales.r.angleLines.color = "rgba(0,0,0,0.06)";
-                radarChart.data.datasets[0].borderColor = "rgba(124,58,237,0.6)";
-                radarChart.data.datasets[0].borderWidth = 2;
-                radarChart.data.datasets[0].backgroundColor = "rgba(139,92,246,0.12)";
-                radarChart.data.datasets[0].pointBackgroundColor = "#7c3aed";
-                radarChart.data.datasets[0].pointRadius = 4;
-                radarChart.data.datasets[0].pointBorderWidth = 1.5;
-                radarChart.update("none");
-            }
+            generatePDF(selectedCandidat, currentScores, currentNotes);
+        } catch (err) {
+            console.error("Erreur export PDF :", err);
+            alert("Erreur lors de la génération du PDF. Vérifiez la console.");
         }
     });
 }
 
-function forceStyle(el, props) {
-    Object.entries(props).forEach(([k, v]) => { el.style.setProperty(k, v, "important"); });
+// Nettoie une chaîne pour la police Helvetica de jsPDF (WinAnsi/Latin-1)
+function cleanText(s) {
+    if (!s) return "";
+    return String(s)
+        .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2700}-\u{27BF}\u{1F000}-\u{1F9FF}]/gu, "")
+        .replace(/[‘’]/g, "'")
+        .replace(/[“”]/g, '"')
+        .replace(/…/g, "...")
+        .replace(/—/g, "-")
+        .replace(/–/g, "-")
+        .replace(/→/g, "->")
+        .replace(/ /g, " ")
+        .replace(/✓|✔|✅/g, "")
+        .replace(/✨|☆|★|✱|❖/g, "*")
+        .trim();
 }
 
-function applyPdfStylesToClone(doc) {
-    // ── Header : remplacer gradient par couleur solide ──
-    const header = doc.querySelector(".pdf-header");
-    if (header) {
-        header.style.cssText = "background-color:#4c1d95; background-image:none; color:#fff; padding:1.75rem 1.75rem; position:relative;";
-        header.querySelectorAll("h2, h2 span").forEach(el => {
-            el.style.cssText = "color:#fff; font-size:1.5rem; font-weight:800; margin-bottom:0.5rem;";
-        });
-        header.querySelectorAll("span, a, p, svg").forEach(el => {
-            forceStyle(el, { "color": "#ffffff", "opacity": "1" });
-        });
+function generatePDF(candidat, scores, notesAnimateur) {
+    const jsPDFCtor = (window.jspdf && window.jspdf.jsPDF) || window.jsPDF;
+    if (!jsPDFCtor) throw new Error("jsPDF non disponible");
+
+    const pdf = new jsPDFCtor({ unit: "mm", format: "a4", orientation: "portrait" });
+    const PW = 210, PH = 297, M = 12, W = PW - 2 * M;
+
+    let y = M;
+
+    // ═══════════ HEADER ═══════════
+    const headerH = 32;
+    pdf.setFillColor(76, 29, 149);                          // #4c1d95
+    pdf.roundedRect(M, y, W, headerH, 3, 3, "F");
+
+    // Nom
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(20);
+    pdf.text(cleanText(`${candidat.prenom||""} ${candidat.nom||""}`), M + 6, y + 11);
+
+    // Sous-titre
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(9);
+    pdf.setTextColor(220, 215, 255);
+    pdf.text("Bilan d'orientation - profil et pistes d'accompagnement", M + 6, y + 16.5);
+
+    // Email
+    pdf.setFontSize(9);
+    pdf.setTextColor(255, 255, 255);
+    pdf.text(cleanText(candidat.email || "—"), M + 6, y + 22);
+
+    // Badges (psy, CV, LinkedIn)
+    let bx = M + 6;
+    const by = y + 25;
+    if (candidat.profil_psy) {
+        const txt = cleanText(candidat.profil_psy);
+        pdf.setFontSize(8);
+        pdf.setFont("helvetica", "bold");
+        const w = pdf.getTextWidth(txt) + 5;
+        pdf.setFillColor(217, 119, 6);                      // #d97706 amber
+        pdf.roundedRect(bx, by, w, 5, 1, 1, "F");
+        pdf.setTextColor(255, 255, 255);
+        pdf.text(txt, bx + 2.5, by + 3.5);
+        bx += w + 2;
+    }
+    if (candidat.cvURL) {
+        pdf.setFontSize(8);
+        pdf.setFont("helvetica", "bold");
+        const w = pdf.getTextWidth("CV") + 6;
+        pdf.setFillColor(255, 255, 255);
+        pdf.roundedRect(bx, by, w, 5, 1, 1, "F");
+        pdf.setTextColor(76, 29, 149);
+        pdf.textWithLink("CV", bx + 3, by + 3.5, { url: candidat.cvURL });
+        bx += w + 2;
+    }
+    if (candidat.linkedin) {
+        pdf.setFontSize(8);
+        pdf.setFont("helvetica", "bold");
+        const w = pdf.getTextWidth("LinkedIn") + 6;
+        pdf.setFillColor(255, 255, 255);
+        pdf.roundedRect(bx, by, w, 5, 1, 1, "F");
+        pdf.setTextColor(29, 78, 216);
+        pdf.textWithLink("LinkedIn", bx + 3, by + 3.5, { url: candidat.linkedin });
     }
 
-    // Bouton export : masquer dans le clone
-    const btnExport = doc.getElementById("btn-export-pdf");
-    if (btnExport) btnExport.style.display = "none";
+    y += headerH + 5;
 
-    // ── Email badge ──
-    const emailBadge = doc.querySelector(".pdf-badge-email");
-    if (emailBadge) {
-        forceStyle(emailBadge, { "background-color": "rgba(255,255,255,0.25)", "color": "#fff" });
+    // ═══════════ NOTES ANIMATEUR ═══════════
+    if (notesAnimateur) {
+        const clean = cleanText(notesAnimateur);
+        pdf.setFont("helvetica", "italic");
+        pdf.setFontSize(9);
+        const lines = pdf.splitTextToSize(clean, W - 10);
+        const blockH = 6 + lines.length * 4 + 4;
+
+        pdf.setFillColor(255, 251, 235);                    // #fffbeb amber-50
+        pdf.setDrawColor(245, 158, 11);                     // #f59e0b
+        pdf.setLineWidth(0.3);
+        pdf.roundedRect(M, y, W, blockH, 2, 2, "FD");
+
+        pdf.setFont("helvetica", "bold");
+        pdf.setFontSize(8);
+        pdf.setTextColor(180, 83, 9);                       // #b45309 amber-700
+        pdf.text("NOTES DE L'ANIMATEUR", M + 4, y + 5);
+
+        pdf.setFont("helvetica", "italic");
+        pdf.setFontSize(9);
+        pdf.setTextColor(120, 53, 15);                      // #78350f
+        pdf.text(lines, M + 4, y + 10);
+
+        y += blockH + 5;
     }
 
-    // ── Psy badge ──
-    const psyBadge = doc.querySelector(".pdf-badge-psy");
-    if (psyBadge && !psyBadge.classList.contains("hidden")) {
-        forceStyle(psyBadge, { "background-color": "#d97706", "color": "#fff" });
-        psyBadge.querySelectorAll("*").forEach(c => forceStyle(c, { "color": "#fff" }));
+    // ═══════════ RADAR + SECTEURS (2 colonnes) ═══════════
+    const colTop  = y;
+    const radarW  = 90;
+    const radarH  = 100;
+    const secX    = M + radarW + 5;
+    const secW    = W - radarW - 5;
+
+    // ── Carte radar ──
+    pdf.setFillColor(255, 255, 255);
+    pdf.setDrawColor(229, 231, 235);
+    pdf.setLineWidth(0.3);
+    pdf.roundedRect(M, y, radarW, radarH, 2, 2, "FD");
+
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(10);
+    pdf.setTextColor(31, 41, 55);
+    pdf.text("Profil des savoir-etre", M + 4, y + 6);
+
+    const hasScores = scores && Object.values(scores).some(v => v > 0);
+    if (hasScores && radarChart) {
+        // Renforcer le radar avant export, puis restaurer
+        const ds = radarChart.data.datasets[0];
+        const opts = radarChart.options.scales.r;
+        const backup = {
+            borderColor: ds.borderColor, borderWidth: ds.borderWidth,
+            backgroundColor: ds.backgroundColor, pointBackgroundColor: ds.pointBackgroundColor,
+            pointRadius: ds.pointRadius, pointBorderWidth: ds.pointBorderWidth,
+            ticksColor: opts.ticks.color, ticksSize: opts.ticks.font.size,
+            labelColor: opts.pointLabels.color, labelSize: opts.pointLabels.font.size,
+            gridColor: opts.grid.color, angleColor: opts.angleLines.color
+        };
+        ds.borderColor = "#7c3aed";
+        ds.borderWidth = 3;
+        ds.backgroundColor = "rgba(124,58,237,0.3)";
+        ds.pointBackgroundColor = "#6d28d9";
+        ds.pointRadius = 5;
+        ds.pointBorderWidth = 2;
+        opts.ticks.color = "#6b7280";
+        opts.ticks.font.size = 10;
+        opts.pointLabels.color = "#1f2937";
+        opts.pointLabels.font.size = 10;
+        opts.grid.color = "rgba(0,0,0,0.18)";
+        opts.angleLines.color = "rgba(0,0,0,0.18)";
+        radarChart.update("none");
+
+        const img = radarChart.toBase64Image("image/png", 1.0);
+        pdf.addImage(img, "PNG", M + 2, y + 8, radarW - 4, radarH - 14);
+
+        ds.borderColor = backup.borderColor;
+        ds.borderWidth = backup.borderWidth;
+        ds.backgroundColor = backup.backgroundColor;
+        ds.pointBackgroundColor = backup.pointBackgroundColor;
+        ds.pointRadius = backup.pointRadius;
+        ds.pointBorderWidth = backup.pointBorderWidth;
+        opts.ticks.color = backup.ticksColor;
+        opts.ticks.font.size = backup.ticksSize;
+        opts.pointLabels.color = backup.labelColor;
+        opts.pointLabels.font.size = backup.labelSize;
+        opts.grid.color = backup.gridColor;
+        opts.angleLines.color = backup.angleColor;
+        radarChart.update("none");
+    } else {
+        pdf.setFont("helvetica", "italic");
+        pdf.setFontSize(9);
+        pdf.setTextColor(156, 163, 175);
+        pdf.text("Aucune observation enregistree", M + 6, y + radarH / 2);
     }
 
-    // ── CV badge ──
-    const cvBadge = doc.querySelector(".pdf-badge-cv");
-    if (cvBadge && !cvBadge.classList.contains("hidden")) {
-        forceStyle(cvBadge, { "background-color": "#fff", "color": "#4c1d95" });
-    }
+    // Légende sous le radar
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(7);
+    pdf.setTextColor(107, 114, 128);
+    pdf.text("Tendances issues d'une seance de jeu.", M + 4, y + radarH - 3);
 
-    // ── LinkedIn badge ──
-    const liBadge = doc.querySelector(".pdf-badge-li");
-    if (liBadge && !liBadge.classList.contains("hidden")) {
-        forceStyle(liBadge, { "background-color": "#fff", "color": "#1d4ed8" });
-    }
+    // ── Cartes secteurs ──
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(10);
+    pdf.setTextColor(31, 41, 55);
+    pdf.text("Pistes d'orientation", secX, y + 6);
 
-    // ── Notes animateur ──
-    const notes = doc.querySelector(".pdf-notes");
-    if (notes && !notes.classList.contains("hidden")) {
-        forceStyle(notes, { "background-color": "#fffbeb", "border-color": "#f59e0b" });
-        notes.querySelectorAll("p, span, svg").forEach(c => {
-            forceStyle(c, { "color": "#78350f", "opacity": "1" });
-        });
-    }
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(7);
+    pdf.setTextColor(107, 114, 128);
+    pdf.text("Suggestions pour ouvrir la discussion - pas des verdicts.", secX, y + 10);
 
-    // ── Titres de section ──
-    doc.querySelectorAll(".pdf-section-title").forEach(h => {
-        forceStyle(h, { "color": "#1f2937" });
+    const sorted = [...SECTEURS].map(s => ({
+        ...s,
+        pct: scores ? Math.round(s.competences.reduce((sum, k) => sum + (scores[k] || 0), 0) / 15 * 100) : 0
+    })).sort((a, b) => b.pct - a.pct);
+
+    let sy = y + 13;
+    const cardH = 21;
+
+    sorted.forEach(s => {
+        let bg, txt, bar, msg;
+        if (s.pct > 75) {
+            bg  = [236, 253, 245];   // emerald-50
+            txt = [4, 120, 87];      // emerald-700
+            bar = [16, 185, 129];    // emerald-500
+            msg = "Forte affinite";
+        } else if (s.pct >= 50) {
+            bg  = [255, 251, 235];   // amber-50
+            txt = [180, 83, 9];      // amber-700
+            bar = [245, 158, 11];    // amber-500
+            msg = "Affinite moderee";
+        } else {
+            bg  = [249, 250, 251];   // gray-50
+            txt = [75, 85, 99];      // gray-600
+            bar = [156, 163, 175];   // gray-400
+            msg = "A explorer";
+        }
+
+        pdf.setFillColor(bg[0], bg[1], bg[2]);
+        pdf.setDrawColor(229, 231, 235);
+        pdf.setLineWidth(0.3);
+        pdf.roundedRect(secX, sy, secW, cardH, 2, 2, "FD");
+
+        pdf.setFont("helvetica", "bold");
+        pdf.setFontSize(10);
+        pdf.setTextColor(31, 41, 55);
+        pdf.text(cleanText(s.nom), secX + 3, sy + 5);
+
+        pdf.setFont("helvetica", "bold");
+        pdf.setFontSize(12);
+        pdf.setTextColor(txt[0], txt[1], txt[2]);
+        const pctTxt = s.pct + "%";
+        const pctW = pdf.getTextWidth(pctTxt);
+        pdf.text(pctTxt, secX + secW - pctW - 3, sy + 6);
+
+        pdf.setFont("helvetica", "normal");
+        pdf.setFontSize(7);
+        pdf.setTextColor(txt[0], txt[1], txt[2]);
+        const mw = pdf.getTextWidth(msg);
+        pdf.text(msg, secX + secW - mw - 3, sy + 10);
+
+        // Description
+        pdf.setFont("helvetica", "normal");
+        pdf.setFontSize(7);
+        pdf.setTextColor(107, 114, 128);
+        pdf.text(cleanText(s.description), secX + 3, sy + 10);
+
+        // Barre de progression
+        const barX = secX + 3;
+        const barY = sy + 13;
+        const barW = secW - 6;
+        pdf.setFillColor(229, 231, 235);
+        pdf.roundedRect(barX, barY, barW, 2, 1, 1, "F");
+        if (s.pct > 0) {
+            pdf.setFillColor(bar[0], bar[1], bar[2]);
+            pdf.roundedRect(barX, barY, barW * (s.pct / 100), 2, 1, 1, "F");
+        }
+
+        // Labels
+        pdf.setFont("helvetica", "normal");
+        pdf.setFontSize(6.5);
+        pdf.setTextColor(107, 114, 128);
+        const tagsText = s.labels.map(cleanText).join(" - ");
+        pdf.text(tagsText, secX + 3, sy + 18);
+
+        sy += cardH + 2;
     });
 
-    // ── Sous-titre ──
-    const sub = doc.querySelector(".pdf-subtitle");
-    if (sub) forceStyle(sub, { "color": "#6b7280" });
+    y = colTop + Math.max(radarH, sy - colTop) + 5;
 
-    // ── Cartes secteurs : forcer opacity:1, animation:none ──
-    doc.querySelectorAll("#secteurs-container > div").forEach(card => {
-        card.style.cssText = card.style.cssText.replace(/opacity\s*:\s*0/, "opacity:1").replace(/animation[^;]*;?/g, "");
-        forceStyle(card, { "opacity": "1" });
+    // ═══════════ DISCLAIMER ═══════════
+    const disclaimerText = "Ce bilan est un outil de mediation, pas de classement. Les observations sont subjectives, liees au contexte d'une seance de jeu. Elles servent de point de depart pour accompagner le jeune dans son orientation, et peuvent etre ajustees a tout moment.";
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(8);
+    const dlines = pdf.splitTextToSize(disclaimerText, W - 14);
+    const discH = 6 + dlines.length * 3.5 + 3;
 
-        card.querySelectorAll(".font-bold").forEach(t => forceStyle(t, { "color": "#1f2937" }));
-        card.querySelectorAll(".text-gray-400").forEach(t => forceStyle(t, { "color": "#6b7280" }));
-        card.querySelectorAll(".text-emerald-700").forEach(t => forceStyle(t, { "color": "#047857" }));
-        card.querySelectorAll(".text-amber-700").forEach(t => forceStyle(t, { "color": "#b45309" }));
-        card.querySelectorAll(".text-gray-500").forEach(t => forceStyle(t, { "color": "#374151" }));
+    if (y + discH > PH - M) y = PH - M - discH;
 
-        card.querySelectorAll(".bg-emerald-500").forEach(b => forceStyle(b, { "background-color": "#10b981" }));
-        card.querySelectorAll(".bg-amber-500").forEach(b => forceStyle(b, { "background-color": "#f59e0b" }));
-        card.querySelectorAll(".bg-gray-400").forEach(b => forceStyle(b, { "background-color": "#9ca3af" }));
-        card.querySelectorAll(".bg-gray-200").forEach(b => forceStyle(b, { "background-color": "#e5e7eb" }));
-    });
+    pdf.setFillColor(245, 243, 255);                        // #f5f3ff
+    pdf.setDrawColor(196, 181, 253);                        // #c4b5fd
+    pdf.setLineWidth(0.3);
+    pdf.roundedRect(M, y, W, discH, 2, 2, "FD");
 
-    // ── Disclaimer ──
-    const disc = doc.querySelector(".pdf-disclaimer");
-    if (disc) {
-        forceStyle(disc, { "background-color": "#f5f3ff", "border-color": "#c4b5fd" });
-        disc.querySelectorAll("p, strong, svg").forEach(c => {
-            forceStyle(c, { "color": "#5b21b6", "opacity": "1" });
-        });
-    }
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(8);
+    pdf.setTextColor(91, 33, 182);                          // #5b21b6
+    pdf.text("RAPPEL", M + 4, y + 5);
+
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(8);
+    pdf.setTextColor(91, 33, 182);
+    pdf.text(dlines, M + 4, y + 9);
+
+    // Pied de page
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(7);
+    pdf.setTextColor(156, 163, 175);
+    const dateStr = new Date().toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" });
+    pdf.text(`SoftSkill Observer - Genere le ${dateStr}`, PW / 2, PH - 5, { align: "center" });
+
+    pdf.save(`Bilan_${cleanText(candidat.prenom||"")}_${cleanText(candidat.nom||"")}.pdf`);
 }
