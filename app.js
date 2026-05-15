@@ -30,7 +30,7 @@ const LABELS_QUALITATIFS = [
 ];
 
 const QLABEL_CLASSES = [
-    "text-white/20",
+    "text-white/35",
     "ql-1",
     "ql-2",
     "ql-3",
@@ -84,14 +84,14 @@ function initSkillsGrid() {
 
         row.innerHTML = `
             <div class="flex items-center gap-2.5 min-w-0 flex-1">
-                <div class="w-7 h-7 rounded-lg bg-white/5 border border-white/5 flex items-center justify-center flex-shrink-0">
-                    <svg class="w-3.5 h-3.5 text-brand-400/60" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <div class="w-7 h-7 rounded-lg bg-white/8 border border-white/10 flex items-center justify-center flex-shrink-0">
+                    <svg class="w-3.5 h-3.5 text-brand-400/80" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="${skill.icon}"/>
                     </svg>
                 </div>
                 <div class="min-w-0">
-                    <span class="font-semibold text-white/80 text-[13px] block leading-tight">${skill.nom}</span>
-                    <span class="text-[10px] text-white/20 block mt-0.5 font-medium qualitative-label" data-qlabel="${skill.nom}">Pas encore observé</span>
+                    <span class="font-semibold text-white/90 text-[13px] block leading-tight">${skill.nom}</span>
+                    <span class="text-[10px] text-white/35 block mt-0.5 font-medium qualitative-label" data-qlabel="${skill.nom}">Pas encore observé</span>
                 </div>
             </div>
             <div class="flex items-center gap-0.5 flex-shrink-0 ml-3" data-stars="${skill.nom}"></div>
