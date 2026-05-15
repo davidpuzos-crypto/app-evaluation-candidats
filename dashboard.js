@@ -359,7 +359,7 @@ function renderSecteurs(scores) {
 }
 
 // ============================================================
-// Export PDF — styles inline pour html2canvas
+// Export PDF — utilise onclone pour modifier le clone html2canvas
 // ============================================================
 function setupExportPDF() {
     document.getElementById("btn-export-pdf").addEventListener("click", async () => {
@@ -367,8 +367,6 @@ function setupExportPDF() {
         const el  = document.getElementById("bilan-container");
         const btn = document.getElementById("btn-export-pdf");
         btn.style.display = "none";
-
-        const saved = applyPdfStyles();
 
         if (radarChart) {
             radarChart.options.scales.r.pointLabels.color = "#374151";
@@ -385,18 +383,25 @@ function setupExportPDF() {
             radarChart.update("none");
         }
 
-        await new Promise(r => setTimeout(r, 150));
+        await new Promise(r => setTimeout(r, 200));
 
         try {
             await html2pdf().set({
                 margin: 10,
                 filename: `Bilan_${selectedCandidat.prenom||""}_${selectedCandidat.nom||""}.pdf`,
                 image: { type: "png", quality: 1.0 },
-                html2canvas: { scale: 2, useCORS: true, backgroundColor: "#ffffff", logging: false },
+                html2canvas: {
+                    scale: 2,
+                    useCORS: true,
+                    backgroundColor: "#ffffff",
+                    logging: false,
+                    onclone: function(clonedDoc) {
+                        applyPdfStylesToClone(clonedDoc);
+                    }
+                },
                 jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
             }).from(el).save();
         } finally {
-            restorePdfStyles(saved);
             btn.style.display = "";
 
             if (radarChart) {
@@ -417,119 +422,93 @@ function setupExportPDF() {
     });
 }
 
-function applyPdfStyles() {
-    const saved = [];
-
-    function save(el, styles) {
-        saved.push({ el, orig: el.style.cssText });
-        Object.entries(styles).forEach(([k, v]) => el.style.setProperty(k, v, "important"));
-    }
-
-    // Header gradient → solid purple
-    const header = document.querySelector(".pdf-header");
-    if (header) {
-        save(header, {
-            "background": "#4c1d95",
-            "background-image": "none"
-        });
-        header.querySelectorAll("*").forEach(child => {
-            if (child.id === "btn-export-pdf") return;
-            const tag = child.tagName.toLowerCase();
-            if (tag === "span" || tag === "h2" || tag === "svg" || tag === "path" || tag === "p" || tag === "a") {
-                save(child, { "color": "#ffffff", "-webkit-text-fill-color": "#ffffff", "opacity": "1" });
-            }
-        });
-    }
-
-    // Email badge
-    const emailBadge = document.querySelector(".pdf-badge-email");
-    if (emailBadge) save(emailBadge, { "background-color": "rgba(255,255,255,0.25)" });
-
-    // Psy badge
-    const psyBadge = document.querySelector(".pdf-badge-psy");
-    if (psyBadge && !psyBadge.classList.contains("hidden")) {
-        save(psyBadge, { "background-color": "#d97706", "color": "#ffffff", "-webkit-text-fill-color": "#ffffff" });
-        psyBadge.querySelectorAll("*").forEach(c => save(c, { "color": "#ffffff", "-webkit-text-fill-color": "#ffffff" }));
-    }
-
-    // CV & LinkedIn badges
-    const cvBadge = document.querySelector(".pdf-badge-cv");
-    if (cvBadge && !cvBadge.classList.contains("hidden")) {
-        save(cvBadge, { "background-color": "#ffffff", "color": "#4c1d95", "-webkit-text-fill-color": "#4c1d95" });
-    }
-    const liBadge = document.querySelector(".pdf-badge-li");
-    if (liBadge && !liBadge.classList.contains("hidden")) {
-        save(liBadge, { "background-color": "#ffffff", "color": "#1d4ed8", "-webkit-text-fill-color": "#1d4ed8" });
-    }
-
-    // Notes animateur
-    const notes = document.querySelector(".pdf-notes");
-    if (notes && !notes.classList.contains("hidden")) {
-        save(notes, { "background-color": "#fffbeb", "border-color": "#f59e0b" });
-        notes.querySelectorAll("p, span").forEach(c => {
-            save(c, { "color": "#78350f", "-webkit-text-fill-color": "#78350f", "opacity": "1" });
-        });
-    }
-
-    // Section titles
-    document.querySelectorAll(".pdf-section-title").forEach(h => {
-        save(h, { "color": "#1f2937", "-webkit-text-fill-color": "#1f2937" });
-    });
-
-    // Subtitle
-    const sub = document.querySelector(".pdf-subtitle");
-    if (sub) save(sub, { "color": "#6b7280", "-webkit-text-fill-color": "#6b7280" });
-
-    // Sector cards
-    document.querySelectorAll("#secteurs-container > div").forEach(card => {
-        save(card, { "opacity": "1", "animation": "none" });
-        card.querySelectorAll(".font-bold.text-gray-700").forEach(t =>
-            save(t, { "color": "#1f2937", "-webkit-text-fill-color": "#1f2937" })
-        );
-        card.querySelectorAll(".text-gray-400").forEach(t =>
-            save(t, { "color": "#6b7280", "-webkit-text-fill-color": "#6b7280" })
-        );
-        card.querySelectorAll(".text-emerald-700").forEach(t =>
-            save(t, { "color": "#047857", "-webkit-text-fill-color": "#047857" })
-        );
-        card.querySelectorAll(".text-amber-700").forEach(t =>
-            save(t, { "color": "#b45309", "-webkit-text-fill-color": "#b45309" })
-        );
-        card.querySelectorAll(".text-gray-500").forEach(t =>
-            save(t, { "color": "#374151", "-webkit-text-fill-color": "#374151" })
-        );
-        card.querySelectorAll(".bg-emerald-500").forEach(bar =>
-            save(bar, { "background-color": "#10b981" })
-        );
-        card.querySelectorAll(".bg-amber-500").forEach(bar =>
-            save(bar, { "background-color": "#f59e0b" })
-        );
-        card.querySelectorAll(".bg-gray-400").forEach(bar =>
-            save(bar, { "background-color": "#9ca3af" })
-        );
-        card.querySelectorAll(".bg-emerald-50").forEach(c =>
-            save(c, { "background-color": "#ecfdf5" })
-        );
-        card.querySelectorAll(".bg-amber-50").forEach(c =>
-            save(c, { "background-color": "#fffbeb" })
-        );
-        card.querySelectorAll(".bg-gray-50").forEach(c =>
-            save(c, { "background-color": "#f9fafb" })
-        );
-    });
-
-    // Disclaimer
-    const disc = document.querySelector(".pdf-disclaimer");
-    if (disc) {
-        save(disc, { "background-color": "#f5f3ff", "border-color": "#c4b5fd" });
-        disc.querySelectorAll("p, strong").forEach(c =>
-            save(c, { "color": "#5b21b6", "-webkit-text-fill-color": "#5b21b6", "opacity": "1" })
-        );
-    }
-
-    return saved;
+function forceStyle(el, props) {
+    Object.entries(props).forEach(([k, v]) => { el.style.setProperty(k, v, "important"); });
 }
 
-function restorePdfStyles(saved) {
-    saved.forEach(({ el, orig }) => { el.style.cssText = orig; });
+function applyPdfStylesToClone(doc) {
+    // ── Header : remplacer gradient par couleur solide ──
+    const header = doc.querySelector(".pdf-header");
+    if (header) {
+        header.style.cssText = "background-color:#4c1d95; background-image:none; color:#fff; padding:1.75rem 1.75rem; position:relative;";
+        header.querySelectorAll("h2, h2 span").forEach(el => {
+            el.style.cssText = "color:#fff; font-size:1.5rem; font-weight:800; margin-bottom:0.5rem;";
+        });
+        header.querySelectorAll("span, a, p, svg").forEach(el => {
+            forceStyle(el, { "color": "#ffffff", "opacity": "1" });
+        });
+    }
+
+    // Bouton export : masquer dans le clone
+    const btnExport = doc.getElementById("btn-export-pdf");
+    if (btnExport) btnExport.style.display = "none";
+
+    // ── Email badge ──
+    const emailBadge = doc.querySelector(".pdf-badge-email");
+    if (emailBadge) {
+        forceStyle(emailBadge, { "background-color": "rgba(255,255,255,0.25)", "color": "#fff" });
+    }
+
+    // ── Psy badge ──
+    const psyBadge = doc.querySelector(".pdf-badge-psy");
+    if (psyBadge && !psyBadge.classList.contains("hidden")) {
+        forceStyle(psyBadge, { "background-color": "#d97706", "color": "#fff" });
+        psyBadge.querySelectorAll("*").forEach(c => forceStyle(c, { "color": "#fff" }));
+    }
+
+    // ── CV badge ──
+    const cvBadge = doc.querySelector(".pdf-badge-cv");
+    if (cvBadge && !cvBadge.classList.contains("hidden")) {
+        forceStyle(cvBadge, { "background-color": "#fff", "color": "#4c1d95" });
+    }
+
+    // ── LinkedIn badge ──
+    const liBadge = doc.querySelector(".pdf-badge-li");
+    if (liBadge && !liBadge.classList.contains("hidden")) {
+        forceStyle(liBadge, { "background-color": "#fff", "color": "#1d4ed8" });
+    }
+
+    // ── Notes animateur ──
+    const notes = doc.querySelector(".pdf-notes");
+    if (notes && !notes.classList.contains("hidden")) {
+        forceStyle(notes, { "background-color": "#fffbeb", "border-color": "#f59e0b" });
+        notes.querySelectorAll("p, span, svg").forEach(c => {
+            forceStyle(c, { "color": "#78350f", "opacity": "1" });
+        });
+    }
+
+    // ── Titres de section ──
+    doc.querySelectorAll(".pdf-section-title").forEach(h => {
+        forceStyle(h, { "color": "#1f2937" });
+    });
+
+    // ── Sous-titre ──
+    const sub = doc.querySelector(".pdf-subtitle");
+    if (sub) forceStyle(sub, { "color": "#6b7280" });
+
+    // ── Cartes secteurs : forcer opacity:1, animation:none ──
+    doc.querySelectorAll("#secteurs-container > div").forEach(card => {
+        card.style.cssText = card.style.cssText.replace(/opacity\s*:\s*0/, "opacity:1").replace(/animation[^;]*;?/g, "");
+        forceStyle(card, { "opacity": "1" });
+
+        card.querySelectorAll(".font-bold").forEach(t => forceStyle(t, { "color": "#1f2937" }));
+        card.querySelectorAll(".text-gray-400").forEach(t => forceStyle(t, { "color": "#6b7280" }));
+        card.querySelectorAll(".text-emerald-700").forEach(t => forceStyle(t, { "color": "#047857" }));
+        card.querySelectorAll(".text-amber-700").forEach(t => forceStyle(t, { "color": "#b45309" }));
+        card.querySelectorAll(".text-gray-500").forEach(t => forceStyle(t, { "color": "#374151" }));
+
+        card.querySelectorAll(".bg-emerald-500").forEach(b => forceStyle(b, { "background-color": "#10b981" }));
+        card.querySelectorAll(".bg-amber-500").forEach(b => forceStyle(b, { "background-color": "#f59e0b" }));
+        card.querySelectorAll(".bg-gray-400").forEach(b => forceStyle(b, { "background-color": "#9ca3af" }));
+        card.querySelectorAll(".bg-gray-200").forEach(b => forceStyle(b, { "background-color": "#e5e7eb" }));
+    });
+
+    // ── Disclaimer ──
+    const disc = doc.querySelector(".pdf-disclaimer");
+    if (disc) {
+        forceStyle(disc, { "background-color": "#f5f3ff", "border-color": "#c4b5fd" });
+        disc.querySelectorAll("p, strong, svg").forEach(c => {
+            forceStyle(c, { "color": "#5b21b6", "opacity": "1" });
+        });
+    }
 }
