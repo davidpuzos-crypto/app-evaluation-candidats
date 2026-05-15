@@ -362,18 +362,51 @@ function renderSecteurs(scores) {
 // Export PDF
 // ============================================================
 function setupExportPDF() {
-    document.getElementById("btn-export-pdf").addEventListener("click", () => {
+    document.getElementById("btn-export-pdf").addEventListener("click", async () => {
         if (!selectedCandidat) return;
         const el  = document.getElementById("bilan-container");
         const btn = document.getElementById("btn-export-pdf");
         btn.style.display = "none";
 
-        html2pdf().set({
-            margin: 10,
-            filename: `Bilan_${selectedCandidat.prenom||""}_${selectedCandidat.nom||""}.pdf`,
-            image: { type: "jpeg", quality: 0.97 },
-            html2canvas: { scale: 2, useCORS: true, backgroundColor: "#ffffff" },
-            jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
-        }).from(el).save().then(() => { btn.style.display = ""; });
+        el.classList.add("pdf-mode");
+
+        if (radarChart) {
+            radarChart.options.scales.r.pointLabels.color = "#374151";
+            radarChart.options.scales.r.ticks.color = "#6b7280";
+            radarChart.options.scales.r.grid.color = "rgba(0,0,0,0.12)";
+            radarChart.options.scales.r.angleLines.color = "rgba(0,0,0,0.12)";
+            radarChart.data.datasets[0].borderColor = "rgba(124,58,237,0.9)";
+            radarChart.data.datasets[0].backgroundColor = "rgba(139,92,246,0.25)";
+            radarChart.data.datasets[0].pointBackgroundColor = "#6d28d9";
+            radarChart.data.datasets[0].pointRadius = 5;
+            radarChart.update("none");
+        }
+
+        await new Promise(r => setTimeout(r, 100));
+
+        try {
+            await html2pdf().set({
+                margin: 10,
+                filename: `Bilan_${selectedCandidat.prenom||""}_${selectedCandidat.nom||""}.pdf`,
+                image: { type: "png", quality: 1.0 },
+                html2canvas: { scale: 2, useCORS: true, backgroundColor: "#ffffff", logging: false },
+                jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
+            }).from(el).save();
+        } finally {
+            el.classList.remove("pdf-mode");
+            btn.style.display = "";
+
+            if (radarChart) {
+                radarChart.options.scales.r.pointLabels.color = "#6b7280";
+                radarChart.options.scales.r.ticks.color = "#9ca3af";
+                radarChart.options.scales.r.grid.color = "rgba(0,0,0,0.06)";
+                radarChart.options.scales.r.angleLines.color = "rgba(0,0,0,0.06)";
+                radarChart.data.datasets[0].borderColor = "rgba(124,58,237,0.6)";
+                radarChart.data.datasets[0].backgroundColor = "rgba(139,92,246,0.12)";
+                radarChart.data.datasets[0].pointBackgroundColor = "#7c3aed";
+                radarChart.data.datasets[0].pointRadius = 4;
+                radarChart.update("none");
+            }
+        }
     });
 }
