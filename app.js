@@ -39,8 +39,8 @@ const QLABEL_CLASSES = [
 ];
 
 let scores = {};
-let editingCandidatId = null;   // ID du jeune en cours de modification
-let deleteCandidatId  = null;   // ID du jeune à supprimer
+let editingCandidatId = null;
+let deleteCandidatId  = null;
 let candidatsCache    = [];     // cache local pour accès rapide
 
 // ============================================================
@@ -264,7 +264,7 @@ async function loadExistingObservation() {
 }
 
 // ============================================================
-// Inscription du jeune
+// Inscription du candidat
 // ============================================================
 function setupFormHandler() {
     document.getElementById("candidat-form").addEventListener("submit", async (e) => {
@@ -294,7 +294,7 @@ function setupFormHandler() {
             showToast("Erreur lors de l'enregistrement", "error");
         } finally {
             btn.disabled = false;
-            btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg> Enregistrer le jeune';
+            btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg> Enregistrer le candidat';
         }
     });
 }
@@ -305,7 +305,7 @@ function setupFormHandler() {
 async function loadCandidats() {
     const select = document.getElementById("select-candidat");
     const prev   = select.value;
-    select.innerHTML = '<option value="">— Choisir un jeune —</option>';
+    select.innerHTML = '<option value="">— Choisir un candidat —</option>';
     candidatsCache = [];
     try {
         const snap = await db.collection("candidats").orderBy("dateInscription", "desc").get();
@@ -335,7 +335,7 @@ function setupObservationHandlers() {
 
 async function saveObservation() {
     const candidatId = document.getElementById("select-candidat").value;
-    if (!candidatId) { showToast("Veuillez choisir un jeune", "error"); return; }
+    if (!candidatId) { showToast("Veuillez choisir un candidat", "error"); return; }
     if (!Object.values(scores).some(v => v > 0)) { showToast("Veuillez renseigner au moins une observation", "error"); return; }
 
     const btn = document.getElementById("btn-save-observation");
@@ -367,7 +367,7 @@ async function saveObservation() {
 }
 
 // ============================================================
-// Modifier / Supprimer un jeune
+// Modifier / Supprimer un candidat
 // ============================================================
 function setupEditDelete() {
     // ── Bouton Modifier ──
@@ -487,7 +487,7 @@ async function confirmDelete() {
         // Supprimer le document principal
         await db.collection("candidats").doc(deleteCandidatId).delete();
 
-        showToast("Jeune supprimé avec ses observations");
+        showToast("Candidat supprimé avec ses observations");
         closeDeleteModal();
         resetScores();
         document.getElementById("select-candidat").value = "";

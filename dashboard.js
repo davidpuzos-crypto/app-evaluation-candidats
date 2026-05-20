@@ -72,7 +72,7 @@ async function loadCandidats() {
         const snap = await db.collection("candidats").orderBy("dateInscription", "desc").get();
         allCandidats = [];
         snap.forEach(doc => allCandidats.push({ id: doc.id, ...doc.data() }));
-        counter.textContent = `${allCandidats.length} jeune(s)`;
+        counter.textContent = `${allCandidats.length} candidat(s)`;
         renderCandidatList(allCandidats);
     } catch (err) {
         console.error("Erreur :", err);
@@ -83,7 +83,7 @@ async function loadCandidats() {
 function renderCandidatList(candidats) {
     const list = document.getElementById("candidat-list");
     if (!candidats.length) {
-        list.innerHTML = '<li class="px-4 py-8 text-center text-gray-300 text-sm">Aucun jeune trouvé</li>';
+        list.innerHTML = '<li class="px-4 py-8 text-center text-gray-300 text-sm">Aucun candidat trouvé</li>';
         return;
     }
     list.innerHTML = "";
@@ -128,7 +128,7 @@ function setupSearch() {
             ? allCandidats.filter(c => `${c.prenom} ${c.nom} ${c.email} ${c.profil_psy||""}`.toLowerCase().includes(q))
             : allCandidats;
         renderCandidatList(filtered);
-        document.getElementById("candidat-count").textContent = `${filtered.length} jeune(s)`;
+        document.getElementById("candidat-count").textContent = `${filtered.length} candidat(s)`;
     });
 }
 
@@ -657,7 +657,7 @@ function generatePDF(candidat, scores, notesAnimateur) {
     y = colTop + Math.max(radarH, sy - colTop) + 5;
 
     // ═══════════ DISCLAIMER ═══════════
-    const disclaimerText = "Ce bilan est un outil de mediation, pas de classement. Les observations sont subjectives, liees au contexte d'une seance de jeu. Elles servent de point de depart pour accompagner le jeune dans son orientation, et peuvent etre ajustees a tout moment.";
+    const disclaimerText = "Ce bilan est un outil de mediation, pas de classement. Les observations sont subjectives, liees au contexte d'une seance de jeu. Elles servent de point de depart pour accompagner le candidat dans son orientation, et peuvent etre ajustees a tout moment.";
     pdf.setFont("helvetica", "normal");
     pdf.setFontSize(8);
     const dlines = pdf.splitTextToSize(disclaimerText, W - 14);
