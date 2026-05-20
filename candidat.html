@@ -326,6 +326,23 @@
                 </div>
             </div>
 
+            <!-- Consentement RGPD -->
+            <div class="glass-card rounded-2xl p-5 mb-4">
+                <div class="flex items-start gap-3 mb-3">
+                    <div class="w-7 h-7 rounded-lg bg-blue-400/15 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <svg class="w-3.5 h-3.5 text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                    </div>
+                    <h2 class="text-sm font-bold text-white/90">Protection des données (RGPD)</h2>
+                </div>
+                <label class="flex items-start gap-3 cursor-pointer group" for="rgpd-consent">
+                    <input type="checkbox" id="rgpd-consent" class="mt-1 w-5 h-5 rounded border-2 border-white/25 bg-white/5 text-brand-500 focus:ring-brand-500 focus:ring-offset-0 focus:ring-2 cursor-pointer flex-shrink-0" style="accent-color:#8b5cf6; min-width:20px; min-height:20px;">
+                    <span class="text-[12px] text-white/60 leading-relaxed group-hover:text-white/70 transition-colors">
+                        En cochant cette case, j'accepte que mes données personnelles (nom, prénom, email, profil 16 Personalities) et les évaluations de mes savoir-être soient collectées et traitées <strong class="text-white/80">exclusivement dans le cadre de ce forum emploi ludique</strong> pour m'accompagner dans mon orientation. Si j'ai moins de 15 ans (minorité numérique au sens du RGPD), je confirme avoir obtenu l'accord de mon parent ou tuteur légal. <span class="text-red-400">*</span>
+                    </span>
+                </label>
+                <p id="rgpd-error" class="hidden text-[11px] text-red-400 mt-2 ml-8 font-medium">Vous devez accepter les conditions pour continuer.</p>
+            </div>
+
             <!-- Bouton enregistrer -->
             <div class="sticky bottom-0 z-10">
                 <button id="btn-enregistrer" class="btn-save w-full text-white py-4 px-6 rounded-xl font-bold flex items-center justify-center gap-2 text-[15px]" style="min-height:54px;">
@@ -356,6 +373,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics-compat.js"></script>
     <script src="firebase-config.js?v=2"></script>
-    <script src="candidat.js?v=3"></script>
+    <script src="candidat.js?v=4"></script>
 </body>
 </html>

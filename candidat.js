@@ -234,6 +234,11 @@ function setupSaveHandler() {
             document.getElementById(id).classList.remove("inp-error");
         });
     });
+
+    // Clear RGPD error on check
+    document.getElementById("rgpd-consent").addEventListener("change", () => {
+        document.getElementById("rgpd-error").classList.add("hidden");
+    });
 }
 
 async function saveCandidat() {
@@ -246,6 +251,17 @@ async function saveCandidat() {
         showToast("Veuillez evaluer au moins un savoir-etre", "error");
         return;
     }
+
+    // RGPD consent validation
+    const rgpdCheckbox = document.getElementById("rgpd-consent");
+    const rgpdError = document.getElementById("rgpd-error");
+    if (!rgpdCheckbox.checked) {
+        rgpdError.classList.remove("hidden");
+        rgpdCheckbox.scrollIntoView({ behavior: "smooth", block: "center" });
+        showToast("Veuillez accepter les conditions RGPD", "error");
+        return;
+    }
+    rgpdError.classList.add("hidden");
 
     const btn = document.getElementById("btn-enregistrer");
     btn.disabled = true;
@@ -284,6 +300,8 @@ async function saveCandidat() {
                 personalityLink,
                 cvURL,
                 scores_candidat,
+                rgpd_consent: true,
+                rgpd_consent_date: firebase.firestore.FieldValue.serverTimestamp(),
                 dateAutoEvaluation: firebase.firestore.FieldValue.serverTimestamp()
             });
             showToast(`${prenom} ${nom}, votre fiche a été mise à jour !`);
@@ -298,6 +316,8 @@ async function saveCandidat() {
                 personalityLink,
                 cvURL,
                 scores_candidat,
+                rgpd_consent: true,
+                rgpd_consent_date: firebase.firestore.FieldValue.serverTimestamp(),
                 dateInscription:    firebase.firestore.FieldValue.serverTimestamp(),
                 dateAutoEvaluation: firebase.firestore.FieldValue.serverTimestamp()
             });
@@ -309,6 +329,7 @@ async function saveCandidat() {
         document.getElementById("profilPsy").value = "";
         document.getElementById("personality-link").value = "";
         document.getElementById("cvURL").value = "";
+        document.getElementById("rgpd-consent").checked = false;
         SAVOIR_ETRE.forEach(skill => {
             scores[skill.nom] = 0;
             updateStars(skill.nom, 0);
