@@ -1,11 +1,7 @@
 // ============================================================
-// Recruteur — Espace recruteur / bilan comparatif
-// Firebase is initialized by firebase-config.js (db)
+// Recruteur — Anti-CV bienveillant
 // ============================================================
 
-// ============================================================
-// Referentiel
-// ============================================================
 const SAVOIR_ETRE = [
     "Capacité d'adaptation", "Gestion du stress", "Travail en équipe",
     "Communication", "Écoute active", "Leadership", "Créativité",
@@ -15,8 +11,8 @@ const SAVOIR_ETRE = [
 
 const LABELS_QUALITATIFS = ["", "En émergence", "En développement", "Observé", "Bien observé", "Point fort"];
 
-// Score colors: 1=red-500, 2=orange-500, 3=yellow-500, 4=emerald-500, 5=violet-500
 const SCORE_COLORS = {
+    0: { bg: "#f3f4f6", text: "#9ca3af", border: "#e5e7eb" },
     1: { bg: "#fef2f2", text: "#ef4444", border: "#fecaca" },
     2: { bg: "#fff7ed", text: "#f97316", border: "#fed7aa" },
     3: { bg: "#fefce8", text: "#eab308", border: "#fef08a" },
@@ -24,34 +20,43 @@ const SCORE_COLORS = {
     5: { bg: "#f5f3ff", text: "#8b5cf6", border: "#ddd6fe" }
 };
 
+const STANDS = [
+    { id: "aeronautique-defense", nom: "Aéronautique & Défense", short: "Aéro", emoji: "✈️" },
+    { id: "batiment",             nom: "Bâtiment",               short: "Bât",  emoji: "🏗️" },
+    { id: "audio-visuel",        nom: "Audio-visuel",           short: "AV",   emoji: "🎬" },
+    { id: "restauration",        nom: "Restauration",           short: "Resto", emoji: "🍽️" }
+];
+
+// ============================================================
+// 16 Personalities decoder
+// ============================================================
+const PERSONALITY_PROFILES = {
+    INTJ: { titre: "L'Architecte",    desc: "Analytique, structuré et orienté solutions. Excelle dans la planification stratégique et la résolution de problèmes complexes." },
+    INTP: { titre: "Le Logicien",     desc: "Curieux, inventif et avide de comprendre. Capacité naturelle à analyser les systèmes et proposer des approches innovantes." },
+    ENTJ: { titre: "Le Commandant",   desc: "Déterminé, stratégique et leader naturel. Sait mobiliser une équipe autour d'un objectif ambitieux." },
+    ENTP: { titre: "L'Innovateur",    desc: "Vif d'esprit, créatif et stimulé par les défis intellectuels. Excellent en brainstorming et résolution créative." },
+    INFJ: { titre: "L'Avocat",        desc: "Idéaliste, organisé et porté par ses convictions. Force tranquille capable d'inspirer et guider les autres." },
+    INFP: { titre: "Le Médiateur",    desc: "Créatif, empathique et axé sur l'harmonie en équipe. Sensible aux besoins des autres, excellent médiateur naturel." },
+    ENFJ: { titre: "Le Protagoniste", desc: "Charismatique, altruiste et inspirant. Fédère naturellement les équipes et crée un environnement positif." },
+    ENFP: { titre: "L'Inspirateur",   desc: "Enthousiaste, créatif et communicatif. Apporte de l'énergie et des idées nouvelles dans chaque projet." },
+    ISTJ: { titre: "Le Logisticien",  desc: "Fiable, méthodique et soucieux du détail. Pilier de confiance sur lequel toute équipe peut s'appuyer." },
+    ISFJ: { titre: "Le Défenseur",    desc: "Dévoué, attentionné et protecteur. Crée un cadre sécurisant et veille au bien-être de l'équipe." },
+    ESTJ: { titre: "Le Directeur",    desc: "Organisé, pragmatique et décisif. Sait structurer le travail et mener un projet à son terme." },
+    ESFJ: { titre: "Le Consul",       desc: "Sociable, attentionné et fédérateur. Excelle dans la cohésion d'équipe et la relation client." },
+    ISTP: { titre: "Le Virtuose",     desc: "Pratique, observateur et performant sous pression. S'adapte vite et trouve des solutions concrètes." },
+    ISFP: { titre: "L'Aventurier",    desc: "Sensible, créatif et ouvert aux nouvelles expériences. Apporte une touche d'originalité et de flexibilité." },
+    ESTP: { titre: "L'Entrepreneur",  desc: "Énergique, pragmatique et orienté action. Excelle dans l'exécution rapide et la prise de décision terrain." },
+    ESFP: { titre: "L'Animateur",     desc: "Spontané, enthousiaste et connecté aux autres. Crée une dynamique positive et sait embarquer son entourage." }
+};
+
 // ============================================================
 // Pistes d'orientation
 // ============================================================
 const SECTEURS = [
-    {
-        nom: "Aéronautique", emoji: "✈️",
-        description: "Précision, calme sous pression, sens de l'organisation",
-        competences: ["Rigueur", "Gestion du stress", "Prise de décision"],
-        labels: ["Rigueur", "Gestion du stress", "Sens de l'organisation"]
-    },
-    {
-        nom: "Restauration", emoji: "🍽️",
-        description: "Réactivité, esprit d'équipe, relation client",
-        competences: ["Gestion des conflits", "Travail en équipe", "Communication"],
-        labels: ["Réactivité", "Travail en équipe", "Communication"]
-    },
-    {
-        nom: "Bâtiment", emoji: "🏗️",
-        description: "Endurance, autonomie, adaptation au terrain",
-        competences: ["Persévérance", "Autonomie", "Capacité d'adaptation"],
-        labels: ["Persévérance", "Autonomie", "Adaptation"]
-    },
-    {
-        nom: "Audio-visuel", emoji: "🎬",
-        description: "Créativité, curiosité, fédérer une équipe",
-        competences: ["Esprit critique", "Créativité", "Leadership"],
-        labels: ["Force de proposition", "Curiosité", "Fédérer"]
-    }
+    { nom: "Aéronautique & Défense", emoji: "✈️", description: "Précision, calme sous pression, sens de l'organisation", competences: ["Rigueur", "Gestion du stress", "Prise de décision"], labels: ["Rigueur", "Gestion du stress", "Sens de l'organisation"] },
+    { nom: "Restauration",           emoji: "🍽️", description: "Réactivité, esprit d'équipe, relation client",           competences: ["Gestion des conflits", "Travail en équipe", "Communication"], labels: ["Réactivité", "Travail en équipe", "Communication"] },
+    { nom: "Bâtiment",               emoji: "🏗️", description: "Endurance, autonomie, adaptation au terrain",             competences: ["Persévérance", "Autonomie", "Capacité d'adaptation"], labels: ["Persévérance", "Autonomie", "Adaptation"] },
+    { nom: "Audio-visuel",           emoji: "🎬",  description: "Créativité, curiosité, fédérer une équipe",               competences: ["Esprit critique", "Créativité", "Leadership"], labels: ["Force de proposition", "Curiosité", "Fédérer"] }
 ];
 
 // ============================================================
@@ -60,9 +65,9 @@ const SECTEURS = [
 let allCandidats = [];
 let radarChart = null;
 let selectedCandidat = null;
-let currentScoresAnimateur = null;
+let currentStandObservations = {};
+let currentAverageScores = null;
 let currentScoresCandidat = null;
-let currentNotes = "";
 
 // ============================================================
 // Init
@@ -144,7 +149,7 @@ function setupSearch() {
 }
 
 // ============================================================
-// Select candidate
+// Select candidate — fetch ALL stand observations
 // ============================================================
 async function selectCandidat(id, liEl) {
     document.querySelectorAll(".sidebar-item").forEach(el => el.classList.remove("active"));
@@ -154,46 +159,54 @@ async function selectCandidat(id, liEl) {
     if (!candidat) return;
     selectedCandidat = candidat;
 
-    // Get animateur scores from observations sub-collection
-    let scoresAnimateur = null;
-    let notesAnimateur = "";
+    const standObservations = {};
     try {
         const snap = await db.collection("candidats").doc(id)
-            .collection("observations").orderBy("dateObservation", "desc").limit(1).get();
-        if (!snap.empty) {
-            const data = snap.docs[0].data();
-            scoresAnimateur = data.scores || data.scores_animateur || null;
-            notesAnimateur = data.notesAnimateur || "";
-        }
+            .collection("observations").get();
+        snap.forEach(doc => {
+            standObservations[doc.id] = doc.data();
+        });
     } catch (err) {
-        console.error("Erreur chargement observation :", err);
+        console.error("Erreur chargement observations :", err);
     }
 
-    // Fallback: dernieresNotesAnimateur or dernieresNotes on main doc
-    if (!scoresAnimateur && candidat.dernieresNotesAnimateur) {
-        scoresAnimateur = candidat.dernieresNotesAnimateur;
-    }
-    if (!scoresAnimateur && candidat.dernieresNotes) {
-        scoresAnimateur = candidat.dernieresNotes;
-    }
-    if (!notesAnimateur && candidat.notesAnimateur) {
-        notesAnimateur = candidat.notesAnimateur;
-    }
+    currentStandObservations = standObservations;
+    currentScoresCandidat = candidat.scores_candidat || null;
+    currentAverageScores = computeAverageScores(standObservations);
 
-    // Get candidate self-evaluation scores
-    let scoresCandidat = candidat.scores_candidat || null;
+    renderBilan(candidat, standObservations);
+}
 
-    currentScoresAnimateur = scoresAnimateur;
-    currentScoresCandidat = scoresCandidat;
-    currentNotes = notesAnimateur;
+// ============================================================
+// Compute average scores across completed stands
+// ============================================================
+function computeAverageScores(standObs) {
+    const sums = {};
+    const counts = {};
+    SAVOIR_ETRE.forEach(skill => { sums[skill] = 0; counts[skill] = 0; });
 
-    renderBilan(candidat, scoresAnimateur, scoresCandidat, notesAnimateur);
+    Object.values(standObs).forEach(obs => {
+        const scores = obs.scores || {};
+        SAVOIR_ETRE.forEach(skill => {
+            const v = scores[skill];
+            if (v && v > 0) {
+                sums[skill] += v;
+                counts[skill]++;
+            }
+        });
+    });
+
+    const avg = {};
+    SAVOIR_ETRE.forEach(skill => {
+        avg[skill] = counts[skill] > 0 ? Math.round(sums[skill] / counts[skill] * 10) / 10 : 0;
+    });
+    return avg;
 }
 
 // ============================================================
 // Render bilan
 // ============================================================
-function renderBilan(candidat, scoresAnimateur, scoresCandidat, notesAnimateur) {
+function renderBilan(candidat, standObservations) {
     document.getElementById("empty-state").classList.add("hidden");
     const container = document.getElementById("bilan-container");
     container.classList.remove("hidden");
@@ -201,12 +214,10 @@ function renderBilan(candidat, scoresAnimateur, scoresCandidat, notesAnimateur) 
     void container.offsetWidth;
     container.style.animation = "fadeUp 0.4s ease forwards";
 
-    // Header
     document.getElementById("bilan-prenom").textContent = candidat.prenom || "";
     document.getElementById("bilan-nom").textContent = candidat.nom || "";
     document.getElementById("bilan-email").textContent = candidat.email || "—";
 
-    // Psy badge
     const psyBadge = document.getElementById("bilan-psy-badge");
     if (candidat.profil_psy) {
         document.getElementById("bilan-profil-psy").textContent = candidat.profil_psy;
@@ -217,88 +228,233 @@ function renderBilan(candidat, scoresAnimateur, scoresCandidat, notesAnimateur) 
         psyBadge.classList.remove("inline-flex");
     }
 
-    // Notes
-    const notesSection = document.getElementById("notes-section");
-    if (notesAnimateur) {
-        document.getElementById("bilan-notes").textContent = notesAnimateur;
-        notesSection.classList.remove("hidden");
-    } else {
-        notesSection.classList.add("hidden");
-    }
+    // Links
+    toggleLink("btn-cv", candidat.cvURL);
+    toggleLink("btn-linkedin", candidat.linkedin);
+    toggleLink("btn-personality", candidat.personalityLink);
 
-    // CV
-    const btnCv = document.getElementById("btn-cv");
-    if (candidat.cvURL) {
-        btnCv.href = candidat.cvURL;
-        btnCv.classList.remove("hidden");
-        btnCv.classList.add("inline-flex");
-    } else {
-        btnCv.classList.add("hidden");
-        btnCv.classList.remove("inline-flex");
-    }
+    renderPersonalityDecoder(candidat.profil_psy);
+    renderStandNotes(standObservations);
+    renderStandsProgress(standObservations);
+    renderSuperPouvoirs(currentAverageScores);
+    renderComparativeTable(currentScoresCandidat, standObservations, currentAverageScores);
+    renderRadar(currentAverageScores, currentScoresCandidat);
+    renderSecteurs(currentAverageScores);
+}
 
-    // LinkedIn
-    const btnLi = document.getElementById("btn-linkedin");
-    if (candidat.linkedin) {
-        btnLi.href = candidat.linkedin;
-        btnLi.classList.remove("hidden");
-        btnLi.classList.add("inline-flex");
+function toggleLink(btnId, url) {
+    const btn = document.getElementById(btnId);
+    if (url) {
+        btn.href = url;
+        btn.classList.remove("hidden");
+        btn.classList.add("inline-flex");
     } else {
-        btnLi.classList.add("hidden");
-        btnLi.classList.remove("inline-flex");
+        btn.classList.add("hidden");
+        btn.classList.remove("inline-flex");
     }
-
-    // 16 Personalities
-    const btnPers = document.getElementById("btn-personality");
-    if (candidat.personalityLink) {
-        btnPers.href = candidat.personalityLink;
-        btnPers.classList.remove("hidden");
-        btnPers.classList.add("inline-flex");
-    } else {
-        btnPers.classList.add("hidden");
-        btnPers.classList.remove("inline-flex");
-    }
-
-    renderComparativeTable(scoresCandidat, scoresAnimateur);
-    renderRadar(scoresAnimateur);
-    renderSecteurs(scoresAnimateur);
 }
 
 // ============================================================
-// Comparative Table (star feature)
+// 1. Personality Decoder
+// ============================================================
+function renderPersonalityDecoder(profilPsy) {
+    const container = document.getElementById("personality-decoder");
+    if (!profilPsy || !PERSONALITY_PROFILES[profilPsy]) {
+        container.classList.add("hidden");
+        container.innerHTML = "";
+        return;
+    }
+
+    const profile = PERSONALITY_PROFILES[profilPsy];
+    container.classList.remove("hidden");
+    container.innerHTML = `
+        <div class="psy-decoder px-7 py-4">
+            <div class="flex items-start gap-3">
+                <div class="w-10 h-10 rounded-xl bg-amber-400/20 border border-amber-300/40 flex items-center justify-center flex-shrink-0">
+                    <span class="text-lg">🧠</span>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-baseline gap-2 flex-wrap">
+                        <span class="font-extrabold text-amber-800 text-base">${profilPsy}</span>
+                        <span class="text-amber-700 font-bold text-sm">— ${profile.titre}</span>
+                    </div>
+                    <p class="text-[13px] text-amber-800/80 leading-relaxed mt-1">${profile.desc}</p>
+                    <p class="text-[10px] text-amber-600/60 mt-2 italic">Le profil de personnalité est un indicateur de tendances comportementales, idéal pour initier un échange constructif, et non un test scientifique strict.</p>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// ============================================================
+// Stand notes (per stand)
+// ============================================================
+function renderStandNotes(standObservations) {
+    const container = document.getElementById("notes-section");
+    const notes = [];
+    STANDS.forEach(stand => {
+        const obs = standObservations[stand.id];
+        if (obs && obs.notesAnimateur) {
+            notes.push({ stand, text: obs.notesAnimateur });
+        }
+    });
+
+    if (!notes.length) {
+        container.classList.add("hidden");
+        container.innerHTML = "";
+        return;
+    }
+
+    container.classList.remove("hidden");
+    container.innerHTML = `
+        <div class="px-7 py-4 bg-amber-50 border-t border-amber-100">
+            <div class="flex items-start gap-2.5">
+                <svg class="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                <div class="flex-1">
+                    <p class="text-xs font-bold text-amber-700 mb-2">Notes des animateurs</p>
+                    ${notes.map(n => `
+                        <div class="mb-1.5 last:mb-0">
+                            <span class="text-[11px] font-bold text-amber-600">${n.stand.emoji} ${n.stand.nom} :</span>
+                            <span class="text-[12px] text-amber-900/70 italic ml-1">${n.text}</span>
+                        </div>
+                    `).join("")}
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// ============================================================
+// Stands progress badges
+// ============================================================
+function renderStandsProgress(standObservations) {
+    const container = document.getElementById("stands-progress");
+    const badges = document.getElementById("stands-badges");
+    const completedCount = STANDS.filter(s => standObservations[s.id]).length;
+
+    if (completedCount === 0) {
+        container.classList.add("hidden");
+        return;
+    }
+
+    container.classList.remove("hidden");
+    badges.innerHTML = STANDS.map(stand => {
+        const done = !!standObservations[stand.id];
+        return `
+            <div class="flex items-center gap-2 px-3.5 py-2.5 rounded-xl border ${done ? 'bg-emerald-50 border-emerald-200' : 'bg-gray-50 border-gray-200'}">
+                <span class="text-lg">${stand.emoji}</span>
+                <div>
+                    <p class="text-[12px] font-bold ${done ? 'text-emerald-700' : 'text-gray-400'}">${stand.nom}</p>
+                    <p class="text-[10px] ${done ? 'text-emerald-500 font-semibold' : 'text-gray-400'}">
+                        ${done ? '✓ Complété' : 'En attente'}
+                    </p>
+                </div>
+            </div>
+        `;
+    }).join("");
+}
+
+// ============================================================
+// 2. Super-Pouvoirs (Top 3)
+// ============================================================
+function renderSuperPouvoirs(avgScores) {
+    const container = document.getElementById("super-pouvoirs-container");
+    if (!avgScores || Object.values(avgScores).every(v => v === 0)) {
+        container.classList.add("hidden");
+        return;
+    }
+
+    const ranked = SAVOIR_ETRE
+        .filter(s => avgScores[s] > 0)
+        .sort((a, b) => avgScores[b] - avgScores[a])
+        .slice(0, 3);
+
+    if (!ranked.length) {
+        container.classList.add("hidden");
+        return;
+    }
+
+    container.classList.remove("hidden");
+    container.innerHTML = `
+        <div class="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden px-7 py-5">
+            <h3 class="flex items-center gap-2.5 text-sm font-bold text-gray-700 mb-4">
+                <div class="w-7 h-7 rounded-lg bg-amber-50 flex items-center justify-center flex-shrink-0">
+                    <span class="text-sm">⚡</span>
+                </div>
+                Ses Super-Pouvoirs sur le terrain
+                <span class="text-[10px] font-normal text-gray-400 ml-1">— Top 3 des savoir-être observés par les animateurs</span>
+            </h3>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                ${ranked.map((skill, idx) => {
+                    const score = avgScores[skill];
+                    const roundedScore = Math.round(score);
+                    const label = LABELS_QUALITATIFS[roundedScore] || "";
+                    const medals = ["🥇", "🥈", "🥉"];
+                    return `
+                        <div class="superpower-card rounded-xl p-4 flex items-center gap-3">
+                            <div class="superpower-rank">${medals[idx]}</div>
+                            <div class="min-w-0">
+                                <p class="font-bold text-brand-800 text-[14px] leading-tight">${skill}</p>
+                                <p class="text-[12px] text-brand-600 font-semibold mt-0.5">${score.toFixed(1)}/5 · ${label}</p>
+                            </div>
+                        </div>
+                    `;
+                }).join("")}
+            </div>
+        </div>
+    `;
+}
+
+// ============================================================
+// 3. Multi-Stand Comparative Table
 // ============================================================
 function getScorePillHTML(score) {
     if (!score || score === 0) {
         return '<span class="score-pill bg-gray-100 text-gray-400 border border-gray-200">—</span>';
     }
-    const label = LABELS_QUALITATIFS[score] || "—";
-    const colors = SCORE_COLORS[score] || { bg: "#f3f4f6", text: "#9ca3af", border: "#e5e7eb" };
+    const rounded = Math.round(score);
+    const label = LABELS_QUALITATIFS[rounded] || "—";
+    const colors = SCORE_COLORS[rounded] || SCORE_COLORS[0];
     return `<span class="score-pill" style="background:${colors.bg};color:${colors.text};border:1px solid ${colors.border}">
-        <span class="w-1.5 h-1.5 rounded-full" style="background:${colors.text}"></span>
-        ${score}/5 · ${label}
+        ${rounded}/5 · ${label}
     </span>`;
 }
 
-function getEcartBadgeHTML(scoreCandidat, scoreAnimateur) {
-    if ((!scoreCandidat || scoreCandidat === 0) || (!scoreAnimateur || scoreAnimateur === 0)) {
-        return '<span class="ecart-badge bg-gray-100 text-gray-400">—</span>';
-    }
-    const ecart = Math.abs(scoreCandidat - scoreAnimateur);
-    let cls = "ecart-green";
-    if (ecart >= 3) cls = "ecart-red";
-    else if (ecart === 2) cls = "ecart-amber";
-
-    const sign = scoreAnimateur > scoreCandidat ? "+" : (scoreAnimateur < scoreCandidat ? "-" : "");
-    return `<span class="ecart-badge ${cls}">${sign}${ecart}</span>`;
+function getStandDotsHTML(skill, standObservations) {
+    return STANDS.map(stand => {
+        const obs = standObservations[stand.id];
+        const score = obs && obs.scores ? (obs.scores[skill] || 0) : 0;
+        if (score === 0) {
+            return `<span class="stand-dot bg-gray-100 text-gray-400 border border-gray-200" title="${stand.nom} : pas encore évalué">—</span>`;
+        }
+        const colors = SCORE_COLORS[score];
+        return `<span class="stand-dot" style="background:${colors.bg};color:${colors.text};border:1px solid ${colors.border}" title="${stand.nom} : ${score}/5 — ${LABELS_QUALITATIFS[score]}">${score}</span>`;
+    }).join("");
 }
 
-function renderComparativeTable(scoresCandidat, scoresAnimateur) {
+function getBoussoleHTML(scoreCandidat, avgTerrain) {
+    if ((!scoreCandidat || scoreCandidat === 0) || avgTerrain === 0) {
+        return '<span class="boussole-badge bg-gray-100 text-gray-400 border border-gray-200">—</span>';
+    }
+
+    const ecart = scoreCandidat - avgTerrain;
+
+    if (Math.abs(ecart) <= 0.8) {
+        return '<span class="boussole-badge boussole-ancree">🤝 Conscience de soi ancrée</span>';
+    }
+    if (ecart < -0.8) {
+        return '<span class="boussole-badge boussole-pepite">💎 Pépite cachée</span>';
+    }
+    return '<span class="boussole-badge boussole-potentiel">🚀 Potentiel à confirmer</span>';
+}
+
+function renderComparativeTable(scoresCandidat, standObservations, avgScores) {
     const tbody = document.getElementById("comp-table-body");
     const emptyMsg = document.getElementById("comp-table-empty");
     const hasCandidat = scoresCandidat && Object.values(scoresCandidat).some(v => v > 0);
-    const hasAnimateur = scoresAnimateur && Object.values(scoresAnimateur).some(v => v > 0);
+    const hasStands = Object.keys(standObservations).length > 0;
 
-    if (!hasCandidat && !hasAnimateur) {
+    if (!hasCandidat && !hasStands) {
         tbody.innerHTML = "";
         emptyMsg.classList.remove("hidden");
         tbody.closest("table").classList.add("hidden");
@@ -311,28 +467,34 @@ function renderComparativeTable(scoresCandidat, scoresAnimateur) {
 
     SAVOIR_ETRE.forEach((skill, idx) => {
         const sc = (scoresCandidat && scoresCandidat[skill]) || 0;
-        const sa = (scoresAnimateur && scoresAnimateur[skill]) || 0;
+        const avg = avgScores[skill] || 0;
 
         const tr = document.createElement("tr");
         tr.className = idx % 2 === 0 ? "bg-white" : "bg-gray-50/50";
         tr.innerHTML = `
             <td class="px-5 py-3 font-medium text-gray-700 text-[13px]">${skill}</td>
-            <td class="px-4 py-3 text-center">${getScorePillHTML(sc)}</td>
-            <td class="px-4 py-3 text-center">${getScorePillHTML(sa)}</td>
-            <td class="px-4 py-3 text-center">${getEcartBadgeHTML(sc, sa)}</td>
+            <td class="px-3 py-3 text-center">${getScorePillHTML(sc)}</td>
+            <td class="px-3 py-3 text-center">
+                <div class="flex items-center justify-center gap-1.5">
+                    ${getStandDotsHTML(skill, standObservations)}
+                </div>
+            </td>
+            <td class="px-3 py-3 text-center">${getBoussoleHTML(sc, avg)}</td>
         `;
         tbody.appendChild(tr);
     });
 }
 
 // ============================================================
-// Radar Chart
+// Radar Chart (dual: auto-eval + terrain average)
 // ============================================================
-function renderRadar(scores) {
+function renderRadar(avgScores, scoresCandidat) {
     const canvas = document.getElementById("radar-chart");
     const noMsg = document.getElementById("no-observation-msg");
+    const hasAvg = avgScores && Object.values(avgScores).some(v => v > 0);
+    const hasCand = scoresCandidat && Object.values(scoresCandidat).some(v => v > 0);
 
-    if (!scores || Object.values(scores).every(v => v === 0)) {
+    if (!hasAvg && !hasCand) {
         canvas.style.display = "none";
         noMsg.classList.remove("hidden");
         if (radarChart) { radarChart.destroy(); radarChart = null; }
@@ -343,31 +505,48 @@ function renderRadar(scores) {
     noMsg.classList.add("hidden");
     if (radarChart) { radarChart.destroy(); radarChart = null; }
 
-    const data = SAVOIR_ETRE.map(s => scores[s] || 0);
+    const datasets = [];
+    if (hasAvg) {
+        datasets.push({
+            label: "Moyenne terrain (animateurs)",
+            data: SAVOIR_ETRE.map(s => avgScores[s] || 0),
+            backgroundColor: "rgba(139,92,246,0.12)",
+            borderColor: "rgba(124,58,237,0.7)",
+            borderWidth: 2,
+            pointBackgroundColor: "#7c3aed",
+            pointBorderColor: "#fff",
+            pointBorderWidth: 1.5,
+            pointRadius: 4,
+            pointHoverRadius: 6
+        });
+    }
+    if (hasCand) {
+        datasets.push({
+            label: "Auto-évaluation (candidat)",
+            data: SAVOIR_ETRE.map(s => (scoresCandidat[s] || 0)),
+            backgroundColor: "rgba(234,179,8,0.08)",
+            borderColor: "rgba(234,179,8,0.5)",
+            borderWidth: 1.5,
+            borderDash: [4, 4],
+            pointBackgroundColor: "#eab308",
+            pointBorderColor: "#fff",
+            pointBorderWidth: 1,
+            pointRadius: 3,
+            pointHoverRadius: 5
+        });
+    }
 
     radarChart = new Chart(canvas, {
         type: "radar",
         data: {
             labels: SAVOIR_ETRE.map(l => l.length > 14 ? l.slice(0, 12) + "…" : l),
-            datasets: [{
-                label: "Observation animateur",
-                data,
-                backgroundColor: "rgba(139,92,246,0.12)",
-                borderColor: "rgba(124,58,237,0.6)",
-                borderWidth: 2,
-                pointBackgroundColor: "#7c3aed",
-                pointBorderColor: "#fff",
-                pointBorderWidth: 1.5,
-                pointRadius: 4,
-                pointHoverRadius: 6,
-                pointHoverBackgroundColor: "#8b5cf6"
-            }]
+            datasets
         },
         options: {
             responsive: true,
             maintainAspectRatio: true,
             plugins: {
-                legend: { display: false },
+                legend: { display: true, position: "bottom", labels: { font: { size: 10 }, usePointStyle: true, pointStyle: "circle", padding: 12 } },
                 tooltip: {
                     backgroundColor: "#1e1b4b",
                     borderColor: "rgba(139,92,246,0.3)",
@@ -376,24 +555,19 @@ function renderRadar(scores) {
                     bodyColor: "#e5e7eb",
                     padding: 10,
                     callbacks: {
-                        label: (ctx) => ` ${LABELS_QUALITATIFS[ctx.raw] || "Non observé"} (${ctx.raw}/5)`
+                        label: (ctx) => {
+                            const v = ctx.raw;
+                            const rounded = Math.round(v);
+                            return ` ${ctx.dataset.label}: ${v.toFixed ? v.toFixed(1) : v}/5 — ${LABELS_QUALITATIFS[rounded] || ""}`;
+                        }
                     }
                 }
             },
             scales: {
                 r: {
                     beginAtZero: true, min: 0, max: 5,
-                    ticks: {
-                        stepSize: 1,
-                        font: { size: 9 },
-                        backdropColor: "transparent",
-                        color: "#9ca3af",
-                        callback: (v) => LABELS_QUALITATIFS[v] ? LABELS_QUALITATIFS[v][0] : ""
-                    },
-                    pointLabels: {
-                        font: { size: 9, weight: "500" },
-                        color: "#6b7280"
-                    },
+                    ticks: { stepSize: 1, font: { size: 9 }, backdropColor: "transparent", color: "#9ca3af" },
+                    pointLabels: { font: { size: 9, weight: "500" }, color: "#6b7280" },
                     grid: { color: "rgba(0,0,0,0.06)" },
                     angleLines: { color: "rgba(0,0,0,0.06)" }
                 }
@@ -476,15 +650,8 @@ function cleanText(s) {
     if (!s) return "";
     return String(s)
         .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2700}-\u{27BF}\u{1F000}-\u{1F9FF}]/gu, "")
-        .replace(/['']/g, "'")
-        .replace(/[""]/g, '"')
-        .replace(/…/g, "...")
-        .replace(/—/g, "-")
-        .replace(/–/g, "-")
-        .replace(/→/g, "->")
-        .replace(/ /g, " ")
-        .replace(/[✓✔✅]/g, "")
-        .replace(/[✨☆★✱❖]/g, "*")
+        .replace(/['']/g, "'").replace(/[""]/g, '"').replace(/…/g, "...").replace(/—/g, "-").replace(/–/g, "-").replace(/→/g, "->").replace(/ /g, " ")
+        .replace(/[✓✔✅]/g, "").replace(/[✨☆★✱❖]/g, "*")
         .replace(/é/g, "e").replace(/è/g, "e").replace(/ê/g, "e").replace(/ë/g, "e")
         .replace(/É/g, "E").replace(/È/g, "E").replace(/Ê/g, "E")
         .replace(/à/g, "a").replace(/â/g, "a").replace(/ä/g, "a")
@@ -493,15 +660,14 @@ function cleanText(s) {
         .replace(/î/g, "i").replace(/ï/g, "i")
         .replace(/ô/g, "o").replace(/ö/g, "o")
         .replace(/ç/g, "c").replace(/Ç/g, "C")
-        .replace(/'/g, "'")
-        .trim();
+        .replace(/'/g, "'").trim();
 }
 
 function setupExportPDF() {
     document.getElementById("btn-export-pdf").addEventListener("click", () => {
         if (!selectedCandidat) return;
         try {
-            generatePDF(selectedCandidat, currentScoresAnimateur, currentScoresCandidat, currentNotes);
+            generatePDF(selectedCandidat, currentStandObservations, currentScoresCandidat, currentAverageScores);
         } catch (err) {
             console.error("Erreur export PDF :", err);
             alert("Erreur PDF : " + err.message);
@@ -509,7 +675,7 @@ function setupExportPDF() {
     });
 }
 
-function generatePDF(candidat, scoresAnimateur, scoresCandidat, notesAnimateur) {
+function generatePDF(candidat, standObservations, scoresCandidat, avgScores) {
     const jsPDFCtor = (window.jspdf && window.jspdf.jsPDF) || window.jsPDF;
     if (!jsPDFCtor) throw new Error("jsPDF non disponible");
 
@@ -518,196 +684,176 @@ function generatePDF(candidat, scoresAnimateur, scoresCandidat, notesAnimateur) 
     let y = M;
 
     // ---- HEADER ----
-    const headerH = 28;
+    const headerH = 22;
     pdf.setFillColor(76, 29, 149);
     pdf.roundedRect(M, y, W, headerH, 3, 3, "F");
 
     pdf.setTextColor(255, 255, 255);
     pdf.setFont("helvetica", "bold");
-    pdf.setFontSize(18);
-    pdf.text(cleanText(`${candidat.prenom || ""} ${candidat.nom || ""}`), M + 6, y + 10);
+    pdf.setFontSize(16);
+    pdf.text(cleanText(`${candidat.prenom || ""} ${candidat.nom || ""}`), M + 6, y + 8);
 
     pdf.setFont("helvetica", "normal");
-    pdf.setFontSize(9);
+    pdf.setFontSize(8);
     pdf.setTextColor(220, 215, 255);
-    pdf.text("Bilan comparatif - Espace recruteur", M + 6, y + 15.5);
+    pdf.text("Anti-CV bienveillant - Forum emploi ludique", M + 6, y + 13);
 
-    pdf.setFontSize(9);
+    pdf.setFontSize(8);
     pdf.setTextColor(255, 255, 255);
-    pdf.text(cleanText(candidat.email || "-"), M + 6, y + 21);
+    const infoLine = [candidat.email || ""].concat(candidat.profil_psy ? [candidat.profil_psy] : []).join("  |  ");
+    pdf.text(cleanText(infoLine), M + 6, y + 18);
+    y += headerH + 3;
 
-    // Badges
-    let bx = M + 6;
-    const by = y + 24;
-    if (candidat.profil_psy) {
-        const txt = cleanText(candidat.profil_psy);
-        pdf.setFontSize(7);
-        pdf.setFont("helvetica", "bold");
-        const w = pdf.getTextWidth(txt) + 5;
-        pdf.setFillColor(217, 119, 6);
-        pdf.roundedRect(bx, by, w, 4, 1, 1, "F");
-        pdf.setTextColor(255, 255, 255);
-        pdf.text(txt, bx + 2.5, by + 3);
-        bx += w + 2;
-    }
-    if (candidat.cvURL) {
-        pdf.setFontSize(7);
-        pdf.setFont("helvetica", "bold");
-        const w = pdf.getTextWidth("CV") + 5;
-        pdf.setFillColor(255, 255, 255);
-        pdf.roundedRect(bx, by, w, 4, 1, 1, "F");
-        pdf.setTextColor(76, 29, 149);
-        pdf.textWithLink("CV", bx + 2.5, by + 3, { url: candidat.cvURL });
-        bx += w + 2;
-    }
-    if (candidat.linkedin) {
-        pdf.setFontSize(7);
-        pdf.setFont("helvetica", "bold");
-        const w = pdf.getTextWidth("LinkedIn") + 5;
-        pdf.setFillColor(255, 255, 255);
-        pdf.roundedRect(bx, by, w, 4, 1, 1, "F");
-        pdf.setTextColor(29, 78, 216);
-        pdf.textWithLink("LinkedIn", bx + 2.5, by + 3, { url: candidat.linkedin });
-    }
-    y += headerH + 4;
-
-    // ---- ANIMATEUR NOTES ----
-    if (notesAnimateur) {
-        const clean = cleanText(notesAnimateur);
-        pdf.setFont("helvetica", "italic");
-        pdf.setFontSize(8);
-        const lines = pdf.splitTextToSize(clean, W - 10);
-        const blockH = 6 + lines.length * 3.5 + 3;
+    // ---- PERSONALITY DECODER ----
+    if (candidat.profil_psy && PERSONALITY_PROFILES[candidat.profil_psy]) {
+        const p = PERSONALITY_PROFILES[candidat.profil_psy];
+        const titleTxt = cleanText(`${candidat.profil_psy} - ${p.titre}`);
+        const descTxt = cleanText(p.desc);
+        const descLines = pdf.splitTextToSize(descTxt, W - 10);
+        const blockH = 10 + descLines.length * 3.2;
 
         pdf.setFillColor(255, 251, 235);
-        pdf.setDrawColor(245, 158, 11);
+        pdf.setDrawColor(253, 230, 138);
         pdf.setLineWidth(0.3);
         pdf.roundedRect(M, y, W, blockH, 2, 2, "FD");
 
         pdf.setFont("helvetica", "bold");
-        pdf.setFontSize(7);
-        pdf.setTextColor(180, 83, 9);
-        pdf.text("NOTES DE L'ANIMATEUR", M + 4, y + 4.5);
+        pdf.setFontSize(9);
+        pdf.setTextColor(146, 64, 14);
+        pdf.text(titleTxt, M + 4, y + 5);
 
-        pdf.setFont("helvetica", "italic");
-        pdf.setFontSize(8);
+        pdf.setFont("helvetica", "normal");
+        pdf.setFontSize(7.5);
         pdf.setTextColor(120, 53, 15);
-        pdf.text(lines, M + 4, y + 9);
+        pdf.text(descLines, M + 4, y + 10);
 
-        y += blockH + 4;
+        y += blockH + 3;
+    }
+
+    // ---- SUPER-POUVOIRS ----
+    const ranked = SAVOIR_ETRE.filter(s => avgScores[s] > 0).sort((a, b) => avgScores[b] - avgScores[a]).slice(0, 3);
+    if (ranked.length > 0) {
+        pdf.setFont("helvetica", "bold");
+        pdf.setFontSize(10);
+        pdf.setTextColor(31, 41, 55);
+        pdf.text("Ses Super-Pouvoirs sur le terrain", M, y + 4);
+        y += 7;
+
+        const cardW = (W - 6) / 3;
+        ranked.forEach((skill, i) => {
+            const cx = M + i * (cardW + 3);
+            pdf.setFillColor(245, 243, 255);
+            pdf.setDrawColor(221, 214, 254);
+            pdf.setLineWidth(0.3);
+            pdf.roundedRect(cx, y, cardW, 14, 2, 2, "FD");
+
+            const medals = ["#1", "#2", "#3"];
+            pdf.setFont("helvetica", "bold");
+            pdf.setFontSize(8);
+            pdf.setTextColor(76, 29, 149);
+            pdf.text(medals[i], cx + 3, y + 5);
+
+            pdf.setFont("helvetica", "bold");
+            pdf.setFontSize(7.5);
+            pdf.setTextColor(91, 33, 182);
+            pdf.text(cleanText(skill), cx + 10, y + 5);
+
+            pdf.setFont("helvetica", "normal");
+            pdf.setFontSize(7);
+            pdf.setTextColor(109, 40, 217);
+            const roundedScore = Math.round(avgScores[skill]);
+            pdf.text(`${avgScores[skill].toFixed(1)}/5 - ${cleanText(LABELS_QUALITATIFS[roundedScore])}`, cx + 10, y + 10);
+        });
+        y += 18;
     }
 
     // ---- COMPARATIVE TABLE ----
     const hasCandidat = scoresCandidat && Object.values(scoresCandidat).some(v => v > 0);
-    const hasAnimateur = scoresAnimateur && Object.values(scoresAnimateur).some(v => v > 0);
+    const hasStands = Object.keys(standObservations).length > 0;
 
-    if (hasCandidat || hasAnimateur) {
+    if (hasCandidat || hasStands) {
         pdf.setFont("helvetica", "bold");
         pdf.setFontSize(10);
         pdf.setTextColor(31, 41, 55);
-        pdf.text("Tableau comparatif des savoir-etre", M, y + 4);
+        pdf.text("Tableau comparatif multi-stands", M, y + 4);
         y += 7;
 
-        // Table header
-        const colX = [M, M + 56, M + 98, M + 140, M + 170];
-        const colLabels = ["Savoir-etre", "Auto-eval.", "Observation", "Label", "Ecart"];
-        const rowH = 6;
+        const colX = [M, M + 48, M + 68, M + 88, M + 108, M + 128];
+        const colLabels = ["Savoir-etre", "Auto", "Aero", "Bat", "AV", "Resto", "Boussole"];
+        const rowH = 5.5;
 
         pdf.setFillColor(243, 244, 246);
         pdf.rect(M, y, W, rowH, "F");
         pdf.setFont("helvetica", "bold");
-        pdf.setFontSize(7);
+        pdf.setFontSize(6);
         pdf.setTextColor(75, 85, 99);
         colLabels.forEach((label, i) => {
-            pdf.text(label, colX[i] + 2, y + 4);
+            if (i < colX.length) pdf.text(label, colX[i] + 1.5, y + 3.8);
+            else pdf.text(label, M + 148, y + 3.8);
         });
         y += rowH;
 
         SAVOIR_ETRE.forEach((skill, idx) => {
-            const sc = (scoresCandidat && scoresCandidat[skill]) || 0;
-            const sa = (scoresAnimateur && scoresAnimateur[skill]) || 0;
+            if (y > PH - 20) { pdf.addPage(); y = M; }
 
-            // Alternate row background
+            const sc = (scoresCandidat && scoresCandidat[skill]) || 0;
+            const avg = avgScores[skill] || 0;
+
             if (idx % 2 === 0) {
                 pdf.setFillColor(249, 250, 251);
                 pdf.rect(M, y, W, rowH, "F");
             }
 
             pdf.setFont("helvetica", "normal");
-            pdf.setFontSize(7);
-            pdf.setTextColor(55, 65, 81);
-            pdf.text(cleanText(skill), colX[0] + 2, y + 4);
-
-            // Candidate score
-            if (sc > 0) {
-                pdf.setTextColor(55, 65, 81);
-                pdf.text(`${sc}/5`, colX[1] + 2, y + 4);
-            } else {
-                pdf.setTextColor(156, 163, 175);
-                pdf.text("-", colX[1] + 2, y + 4);
-            }
-
-            // Animateur score
-            if (sa > 0) {
-                pdf.setTextColor(55, 65, 81);
-                pdf.text(`${sa}/5`, colX[2] + 2, y + 4);
-            } else {
-                pdf.setTextColor(156, 163, 175);
-                pdf.text("-", colX[2] + 2, y + 4);
-            }
-
-            // Label
-            const labelTxt = sa > 0 ? cleanText(LABELS_QUALITATIFS[sa]) : (sc > 0 ? cleanText(LABELS_QUALITATIFS[sc]) : "-");
-            pdf.setTextColor(107, 114, 128);
             pdf.setFontSize(6.5);
-            pdf.text(labelTxt, colX[3] + 2, y + 4);
+            pdf.setTextColor(55, 65, 81);
+            pdf.text(cleanText(skill), colX[0] + 1.5, y + 3.8);
 
-            // Ecart
-            pdf.setFontSize(7);
-            if (sc > 0 && sa > 0) {
-                const ecart = Math.abs(sc - sa);
-                if (ecart <= 1) {
-                    pdf.setFillColor(209, 250, 229); pdf.setTextColor(6, 95, 70);
-                } else if (ecart === 2) {
-                    pdf.setFillColor(254, 243, 199); pdf.setTextColor(146, 64, 14);
+            // Auto score
+            pdf.setTextColor(sc > 0 ? [55, 65, 81] : [156, 163, 175]);
+            pdf.text(sc > 0 ? `${sc}/5` : "-", colX[1] + 1.5, y + 3.8);
+
+            // Stand scores
+            STANDS.forEach((stand, si) => {
+                const obs = standObservations[stand.id];
+                const sv = obs && obs.scores ? (obs.scores[skill] || 0) : 0;
+                pdf.setTextColor(sv > 0 ? [55, 65, 81] : [156, 163, 175]);
+                pdf.text(sv > 0 ? `${sv}/5` : "-", colX[2 + si] + 1.5, y + 3.8);
+            });
+
+            // Boussole text
+            pdf.setFontSize(6);
+            if (sc > 0 && avg > 0) {
+                const ecart = sc - avg;
+                if (Math.abs(ecart) <= 0.8) {
+                    pdf.setTextColor(6, 95, 70);
+                    pdf.text("Conscience ancree", M + 148, y + 3.8);
+                } else if (ecart < -0.8) {
+                    pdf.setTextColor(30, 64, 175);
+                    pdf.text("Pepite cachee", M + 148, y + 3.8);
                 } else {
-                    pdf.setFillColor(254, 226, 226); pdf.setTextColor(153, 27, 27);
+                    pdf.setTextColor(133, 77, 14);
+                    pdf.text("Potentiel a confirmer", M + 148, y + 3.8);
                 }
-                const ecartW = 10;
-                pdf.roundedRect(colX[4] + 2, y + 0.5, ecartW, 5, 1, 1, "F");
-                const sign = sa > sc ? "+" : (sa < sc ? "-" : "");
-                pdf.text(`${sign}${ecart}`, colX[4] + 4, y + 4);
             } else {
                 pdf.setTextColor(156, 163, 175);
-                pdf.text("-", colX[4] + 4, y + 4);
+                pdf.text("-", M + 150, y + 3.8);
             }
 
             y += rowH;
-
-            // Page break check
-            if (y > PH - 40) {
-                pdf.addPage();
-                y = M;
-            }
         });
 
         y += 4;
     }
 
-    // ---- RADAR + SECTORS (2 columns) ----
-    // Check if we need a new page
-    if (y > PH - 110) {
-        pdf.addPage();
-        y = M;
-    }
+    // ---- RADAR ----
+    if (y > PH - 100) { pdf.addPage(); y = M; }
 
     const colTop = y;
-    const radarW = 90;
-    const radarH = 90;
+    const radarW = 90, radarH = 90;
     const secX = M + radarW + 5;
     const secW = W - radarW - 5;
 
-    // Radar card
     pdf.setFillColor(255, 255, 255);
     pdf.setDrawColor(229, 231, 235);
     pdf.setLineWidth(0.3);
@@ -718,48 +864,10 @@ function generatePDF(candidat, scoresAnimateur, scoresCandidat, notesAnimateur) 
     pdf.setTextColor(31, 41, 55);
     pdf.text("Profil des savoir-etre", M + 4, y + 6);
 
-    const hasScores = scoresAnimateur && Object.values(scoresAnimateur).some(v => v > 0);
-    if (hasScores && radarChart) {
-        const ds = radarChart.data.datasets[0];
-        const opts = radarChart.options.scales.r;
-        const backup = {
-            borderColor: ds.borderColor, borderWidth: ds.borderWidth,
-            backgroundColor: ds.backgroundColor, pointBackgroundColor: ds.pointBackgroundColor,
-            pointRadius: ds.pointRadius, pointBorderWidth: ds.pointBorderWidth,
-            ticksColor: opts.ticks.color, ticksSize: opts.ticks.font.size,
-            labelColor: opts.pointLabels.color, labelSize: opts.pointLabels.font.size,
-            gridColor: opts.grid.color, angleColor: opts.angleLines.color
-        };
-        ds.borderColor = "#7c3aed";
-        ds.borderWidth = 3;
-        ds.backgroundColor = "rgba(124,58,237,0.3)";
-        ds.pointBackgroundColor = "#6d28d9";
-        ds.pointRadius = 5;
-        ds.pointBorderWidth = 2;
-        opts.ticks.color = "#6b7280";
-        opts.ticks.font.size = 10;
-        opts.pointLabels.color = "#1f2937";
-        opts.pointLabels.font.size = 10;
-        opts.grid.color = "rgba(0,0,0,0.18)";
-        opts.angleLines.color = "rgba(0,0,0,0.18)";
-        radarChart.update("none");
-
+    const hasRadarData = avgScores && Object.values(avgScores).some(v => v > 0);
+    if (hasRadarData && radarChart) {
         const img = radarChart.toBase64Image("image/png", 1.0);
         pdf.addImage(img, "PNG", M + 2, y + 8, radarW - 4, radarH - 14);
-
-        ds.borderColor = backup.borderColor;
-        ds.borderWidth = backup.borderWidth;
-        ds.backgroundColor = backup.backgroundColor;
-        ds.pointBackgroundColor = backup.pointBackgroundColor;
-        ds.pointRadius = backup.pointRadius;
-        ds.pointBorderWidth = backup.pointBorderWidth;
-        opts.ticks.color = backup.ticksColor;
-        opts.ticks.font.size = backup.ticksSize;
-        opts.pointLabels.color = backup.labelColor;
-        opts.pointLabels.font.size = backup.labelSize;
-        opts.grid.color = backup.gridColor;
-        opts.angleLines.color = backup.angleColor;
-        radarChart.update("none");
     } else {
         pdf.setFont("helvetica", "italic");
         pdf.setFontSize(8);
@@ -773,28 +881,19 @@ function generatePDF(candidat, scoresAnimateur, scoresCandidat, notesAnimateur) 
     pdf.setTextColor(31, 41, 55);
     pdf.text("Pistes d'orientation", secX, y + 6);
 
-    pdf.setFont("helvetica", "normal");
-    pdf.setFontSize(6.5);
-    pdf.setTextColor(107, 114, 128);
-    pdf.text("Suggestions - pas des verdicts.", secX, y + 10);
-
     const sorted = [...SECTEURS].map(s => ({
         ...s,
-        pct: scoresAnimateur ? Math.round(s.competences.reduce((sum, k) => sum + (scoresAnimateur[k] || 0), 0) / 15 * 100) : 0
+        pct: avgScores ? Math.round(s.competences.reduce((sum, k) => sum + (avgScores[k] || 0), 0) / 15 * 100) : 0
     })).sort((a, b) => b.pct - a.pct);
 
-    let sy = y + 13;
+    let sy = y + 12;
     const cardH = 19;
 
     sorted.forEach(s => {
-        let bg, txt, bar, msg;
-        if (s.pct > 75) {
-            bg = [236, 253, 245]; txt = [4, 120, 87]; bar = [16, 185, 129]; msg = "Forte affinite";
-        } else if (s.pct >= 50) {
-            bg = [255, 251, 235]; txt = [180, 83, 9]; bar = [245, 158, 11]; msg = "Affinite moderee";
-        } else {
-            bg = [249, 250, 251]; txt = [75, 85, 99]; bar = [156, 163, 175]; msg = "A explorer";
-        }
+        let bg, txt, bar;
+        if (s.pct > 75) { bg = [236, 253, 245]; txt = [4, 120, 87]; bar = [16, 185, 129]; }
+        else if (s.pct >= 50) { bg = [255, 251, 235]; txt = [180, 83, 9]; bar = [245, 158, 11]; }
+        else { bg = [249, 250, 251]; txt = [75, 85, 99]; bar = [156, 163, 175]; }
 
         pdf.setFillColor(bg[0], bg[1], bg[2]);
         pdf.setDrawColor(229, 231, 235);
@@ -818,10 +917,7 @@ function generatePDF(candidat, scoresAnimateur, scoresCandidat, notesAnimateur) 
         pdf.setTextColor(107, 114, 128);
         pdf.text(cleanText(s.description), secX + 3, sy + 9);
 
-        // Progress bar
-        const barX = secX + 3;
-        const barY = sy + 11.5;
-        const barW = secW - 6;
+        const barX = secX + 3, barY = sy + 11.5, barW = secW - 6;
         pdf.setFillColor(229, 231, 235);
         pdf.roundedRect(barX, barY, barW, 2, 1, 1, "F");
         if (s.pct > 0) {
@@ -829,7 +925,6 @@ function generatePDF(candidat, scoresAnimateur, scoresCandidat, notesAnimateur) 
             pdf.roundedRect(barX, barY, barW * (s.pct / 100), 2, 1, 1, "F");
         }
 
-        // Labels
         pdf.setFont("helvetica", "normal");
         pdf.setFontSize(6);
         pdf.setTextColor(107, 114, 128);
@@ -841,12 +936,9 @@ function generatePDF(candidat, scoresAnimateur, scoresCandidat, notesAnimateur) 
     y = colTop + Math.max(radarH, sy - colTop) + 5;
 
     // ---- DISCLAIMER ----
-    if (y > PH - 25) {
-        pdf.addPage();
-        y = M;
-    }
+    if (y > PH - 20) { pdf.addPage(); y = M; }
 
-    const disclaimerText = "Ce bilan est un outil de mediation, pas de classement. Les observations sont subjectives, liees au contexte d'une seance de jeu. Elles servent de point de depart pour accompagner le candidat dans son orientation.";
+    const disclaimerText = "Cet Anti-CV est un outil de mediation, pas de classement. Les observations sont subjectives, liees au contexte de seances de jeu. Elles servent de point de depart pour accompagner le candidat dans son orientation.";
     pdf.setFont("helvetica", "normal");
     pdf.setFontSize(7);
     const dlines = pdf.splitTextToSize(disclaimerText, W - 14);
@@ -872,7 +964,7 @@ function generatePDF(candidat, scoresAnimateur, scoresCandidat, notesAnimateur) 
     pdf.setFontSize(7);
     pdf.setTextColor(156, 163, 175);
     const dateStr = new Date().toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" });
-    pdf.text(`SoftSkill Observer - Espace recruteur - Genere le ${dateStr}`, PW / 2, PH - 5, { align: "center" });
+    pdf.text(`SoftSkill Observer - Anti-CV bienveillant - Genere le ${dateStr}`, PW / 2, PH - 5, { align: "center" });
 
-    pdf.save(`Bilan_Recruteur_${cleanText(candidat.prenom || "")}_${cleanText(candidat.nom || "")}.pdf`);
+    pdf.save(`AntiCV_${cleanText(candidat.prenom || "")}_${cleanText(candidat.nom || "")}.pdf`);
 }

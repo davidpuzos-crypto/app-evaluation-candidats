@@ -13,7 +13,7 @@
         }
     </script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
         * { box-sizing: border-box; }
         body { font-family: 'Inter', system-ui, sans-serif; }
 
@@ -42,13 +42,52 @@
 
         /* Comparative table */
         .comp-table th { position: sticky; top: 0; z-index: 2; }
-        .ecart-badge { display:inline-flex; align-items:center; justify-content:center; min-width:28px; padding:2px 8px; border-radius:9999px; font-weight:700; font-size:12px; }
-        .ecart-green { background-color:#d1fae5; color:#065f46; }
-        .ecart-amber { background-color:#fef3c7; color:#92400e; }
-        .ecart-red   { background-color:#fee2e2; color:#991b1b; }
 
-        /* Score label pill */
+        /* Score pill */
         .score-pill { display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:9999px; font-size:11px; font-weight:600; white-space:nowrap; }
+
+        /* Stand micro-pastille */
+        .stand-dot {
+            display:inline-flex; align-items:center; justify-content:center;
+            width:26px; height:26px; border-radius:6px; font-size:10px; font-weight:700;
+            transition: transform 0.15s;
+        }
+        .stand-dot:hover { transform:scale(1.15); }
+        .stand-dot[data-tippy] { cursor:help; }
+
+        /* Boussole badges */
+        .boussole-badge {
+            display:inline-flex; align-items:center; gap:5px;
+            padding:4px 10px; border-radius:9999px;
+            font-size:11px; font-weight:600; white-space:nowrap;
+        }
+        .boussole-ancree   { background:#ecfdf5; color:#065f46; border:1px solid #a7f3d0; }
+        .boussole-pepite    { background:#eff6ff; color:#1e40af; border:1px solid #bfdbfe; }
+        .boussole-potentiel { background:#fefce8; color:#854d0e; border:1px solid #fef08a; }
+
+        /* Super-powers card */
+        .superpower-card {
+            background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);
+            border: 1px solid #ddd6fe;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .superpower-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(139,92,246,0.15);
+        }
+        .superpower-rank {
+            background: linear-gradient(135deg, #7c3aed, #6d28d9);
+            color: white;
+            width:32px; height:32px; border-radius:50%;
+            display:flex; align-items:center; justify-content:center;
+            font-weight:800; font-size:14px; flex-shrink:0;
+        }
+
+        /* Personality decoder */
+        .psy-decoder {
+            background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+            border: 1px solid #fde68a;
+        }
     </style>
 </head>
 <body class="bg-gray-50 h-screen flex flex-col overflow-hidden">
@@ -62,7 +101,7 @@
                 </div>
                 <div>
                     <h1 class="text-base font-bold leading-tight tracking-tight">SoftSkill <span class="text-brand-200">Observer</span></h1>
-                    <p class="text-[10px] text-white/70 font-medium">Espace recruteur</p>
+                    <p class="text-[10px] text-white/70 font-medium">Espace recruteur &middot; Anti-CV bienveillant</p>
                 </div>
             </div>
             <a href="index.html" class="no-print flex items-center gap-1.5 bg-white/10 hover:bg-white/20 border border-white/20 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all">
@@ -101,7 +140,7 @@
                     <svg class="w-10 h-10 text-brand-300" fill="none" stroke="currentColor" stroke-width="1.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
                 </div>
                 <p class="text-base font-bold text-gray-500 mb-1">Selectionnez un candidat</p>
-                <p class="text-sm text-gray-400">Cliquez sur un nom dans la liste pour afficher son bilan complet</p>
+                <p class="text-sm text-gray-400">Cliquez sur un nom dans la liste pour afficher son Anti-CV</p>
             </div>
 
             <!-- Bilan -->
@@ -137,42 +176,51 @@
                         </div>
                     </div>
 
-                    <!-- Animateur notes -->
-                    <div id="notes-section" class="hidden px-7 py-4 bg-amber-50 border-t border-amber-100">
-                        <div class="flex items-start gap-2.5">
-                            <svg class="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                            <div>
-                                <p class="text-xs font-bold text-amber-700 mb-1">Notes de l'animateur</p>
-                                <p id="bilan-notes" class="text-sm text-amber-900/70 italic leading-relaxed"></p>
+                    <!-- Personality decoder -->
+                    <div id="personality-decoder" class="hidden"></div>
+
+                    <!-- Stand notes (per stand) -->
+                    <div id="notes-section" class="hidden"></div>
+                </div>
+
+                <!-- SUPER-POUVOIRS -->
+                <div id="super-pouvoirs-container" class="hidden mb-6"></div>
+
+                <!-- PARCOURS STANDS PROGRESS -->
+                <div id="stands-progress" class="hidden mb-6">
+                    <div class="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden px-7 py-5">
+                        <h3 class="flex items-center gap-2.5 text-sm font-bold text-gray-700 mb-3">
+                            <div class="w-7 h-7 rounded-lg bg-emerald-50 flex items-center justify-center flex-shrink-0">
+                                <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l5.447 2.724A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
                             </div>
-                        </div>
+                            Parcours du candidat
+                        </h3>
+                        <div id="stands-badges" class="flex flex-wrap gap-3"></div>
                     </div>
                 </div>
 
-                <!-- COMPARATIVE TABLE (star feature) -->
+                <!-- COMPARATIVE TABLE (multi-stand) -->
                 <div class="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden mb-6">
                     <div class="px-7 py-5 border-b border-gray-100">
                         <h3 class="flex items-center gap-2.5 text-sm font-bold text-gray-700">
                             <div class="w-7 h-7 rounded-lg bg-indigo-50 flex items-center justify-center flex-shrink-0">
                                 <svg class="w-3.5 h-3.5 text-indigo-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
                             </div>
-                            Tableau comparatif des savoir-etre
+                            Tableau comparatif multi-stands
                         </h3>
-                        <p class="text-[11px] text-gray-400 mt-1 ml-9">Auto-evaluation du candidat vs observation de l'animateur</p>
+                        <p class="text-[11px] text-gray-400 mt-1 ml-9">Auto-evaluation du candidat vs observations terrain sur 4 stands</p>
                     </div>
                     <div class="overflow-x-auto">
                         <table class="comp-table w-full text-sm">
                             <thead>
                                 <tr class="bg-gray-50 border-b border-gray-200">
                                     <th class="text-left px-5 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wider">Savoir-etre</th>
-                                    <th class="text-center px-4 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wider">Auto-evaluation<br><span class="font-normal text-gray-400 normal-case">(Candidat)</span></th>
-                                    <th class="text-center px-4 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wider">Observation<br><span class="font-normal text-gray-400 normal-case">(Animateur)</span></th>
-                                    <th class="text-center px-4 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wider">Ecart</th>
+                                    <th class="text-center px-3 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wider">Auto-eval.</th>
+                                    <th class="text-center px-3 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wider">Parcours stands<br><span class="font-normal text-gray-400 normal-case text-[10px]">✈️ Aero &middot; 🏗️ Bat &middot; 🎬 AV &middot; 🍽️ Resto</span></th>
+                                    <th class="text-center px-3 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wider">Boussole<br><span class="font-normal text-gray-400 normal-case text-[10px]">Alignement auto/terrain</span></th>
                                 </tr>
                             </thead>
-                            <tbody id="comp-table-body">
-                                <!-- Generated by JS -->
-                            </tbody>
+                            <tbody id="comp-table-body"></tbody>
                         </table>
                     </div>
                     <div id="comp-table-empty" class="hidden px-7 py-10 text-center text-gray-300 text-sm">
@@ -189,13 +237,13 @@
                             <div class="w-7 h-7 rounded-lg bg-brand-50 flex items-center justify-center flex-shrink-0">
                                 <svg class="w-3.5 h-3.5 text-brand-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/></svg>
                             </div>
-                            Profil des savoir-etre observes
+                            Profil des savoir-etre (moyenne terrain)
                         </h3>
                         <div class="rounded-xl bg-gray-50 border border-gray-100 p-3">
                             <canvas id="radar-chart"></canvas>
                         </div>
                         <p id="no-observation-msg" class="hidden text-center text-gray-300 text-xs py-6">Aucune observation enregistree pour l'instant.</p>
-                        <p class="text-[10px] text-gray-400 mt-3 text-center">Ces tendances sont issues d'une seance de jeu -- non d'une evaluation definitive.</p>
+                        <p class="text-[10px] text-gray-400 mt-3 text-center">Moyenne des evaluations terrain sur les stands completes.</p>
                     </div>
 
                     <!-- Sectors -->
@@ -207,9 +255,7 @@
                             Pistes d'orientation
                         </h3>
                         <p class="text-[11px] text-gray-400 mb-4 ml-9">Suggestions pour ouvrir la discussion -- pas des verdicts.</p>
-                        <div id="secteurs-container" class="space-y-3">
-                            <!-- Generated by JS -->
-                        </div>
+                        <div id="secteurs-container" class="space-y-3"></div>
                     </div>
 
                 </div>
@@ -218,7 +264,7 @@
                 <div class="bg-brand-50 border border-brand-100 rounded-xl px-5 py-3.5 mb-6">
                     <div class="flex items-start gap-3">
                         <svg class="w-4 h-4 text-brand-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
-                        <p class="text-[11px] text-brand-700 leading-relaxed"><strong class="font-semibold">Rappel :</strong> Ce bilan est un outil de mediation, pas de classement. Les observations sont subjectives, liees au contexte d'une seance de jeu. Elles servent de point de depart pour accompagner le candidat dans son orientation, et peuvent etre ajustees a tout moment.</p>
+                        <p class="text-[11px] text-brand-700 leading-relaxed"><strong class="font-semibold">Rappel :</strong> Cet Anti-CV est un outil de mediation, pas de classement. Les observations sont subjectives, liees au contexte de seances de jeu. Elles servent de point de depart pour accompagner le candidat dans son orientation, et peuvent etre ajustees a tout moment.</p>
                     </div>
                 </div>
 
@@ -257,6 +303,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics-compat.js"></script>
     <script src="firebase-config.js?v=2"></script>
-    <script src="recruteur.js?v=2"></script>
+    <script src="recruteur.js?v=3"></script>
 </body>
 </html>
