@@ -76,61 +76,103 @@ document.addEventListener("DOMContentLoaded", () => {
     loadCandidats();
     setupSearch();
     setupExportPDF();
+    setupMobileSidebar();
 });
+
+// ============================================================
+// Mobile sidebar
+// ============================================================
+function setupMobileSidebar() {
+    const overlay = document.getElementById("sidebar-overlay");
+    const backdrop = document.getElementById("sidebar-backdrop");
+    const btnToggle = document.getElementById("btn-sidebar-toggle");
+    const btnClose = document.getElementById("btn-sidebar-close");
+    const btnSelectMobile = document.getElementById("btn-select-mobile");
+    const fab = document.getElementById("fab-candidats");
+
+    function openSidebar() { overlay.classList.remove("sidebar-closed"); document.body.style.overflow = "hidden"; }
+    function closeSidebar() { overlay.classList.add("sidebar-closed"); document.body.style.overflow = ""; }
+
+    btnToggle.addEventListener("click", openSidebar);
+    btnClose.addEventListener("click", closeSidebar);
+    backdrop.addEventListener("click", closeSidebar);
+    if (btnSelectMobile) btnSelectMobile.addEventListener("click", openSidebar);
+    if (fab) fab.addEventListener("click", openSidebar);
+
+    window._closeMobileSidebar = closeSidebar;
+}
+
+function showFab(show) {
+    const fab = document.getElementById("fab-candidats");
+    if (fab) fab.classList.toggle("hidden", !show);
+}
 
 // ============================================================
 // Load candidates
 // ============================================================
 async function loadCandidats() {
-    const list = document.getElementById("candidat-list");
-    const counter = document.getElementById("candidat-count");
     try {
         const snap = await db.collection("candidats").orderBy("dateInscription", "desc").get();
         allCandidats = [];
         snap.forEach(doc => allCandidats.push({ id: doc.id, ...doc.data() }));
-        counter.textContent = `${allCandidats.length} candidat(s)`;
         renderCandidatList(allCandidats);
+        updateCounts(allCandidats.length);
     } catch (err) {
         console.error("Erreur chargement candidats :", err);
-        list.innerHTML = '<li class="px-4 py-6 text-center text-red-400/60 text-sm">Erreur de chargement</li>';
+        getListEls().forEach(el => {
+            el.innerHTML = '<li class="px-4 py-6 text-center text-red-400/60 text-sm">Erreur de chargement</li>';
+        });
     }
 }
 
+function getListEls() {
+    return [document.getElementById("candidat-list"), document.getElementById("candidat-list-mobile")].filter(Boolean);
+}
+
+function updateCounts(count) {
+    const txt = `${count} candidat(s)`;
+    ["candidat-count", "candidat-count-mobile"].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = txt;
+    });
+}
+
 function renderCandidatList(candidats) {
-    const list = document.getElementById("candidat-list");
-    if (!candidats.length) {
-        list.innerHTML = '<li class="px-4 py-8 text-center text-gray-300 text-sm">Aucun candidat trouvé</li>';
-        return;
-    }
-    list.innerHTML = "";
-    candidats.forEach(c => {
-        const li = document.createElement("li");
-        li.className = "sidebar-item px-4 py-3";
-        li.setAttribute("data-id", c.id);
-
-        let dateStr = "";
-        const ts = c.dateDerniereObservation || c.dateInscription;
-        if (ts) {
-            const d = ts.toDate ? ts.toDate() : new Date(ts);
-            dateStr = d.toLocaleDateString("fr-FR", { day: "2-digit", month: "short" });
+    getListEls().forEach(list => {
+        if (!candidats.length) {
+            list.innerHTML = '<li class="px-4 py-8 text-center text-gray-300 text-sm">Aucun candidat trouvé</li>';
+            return;
         }
+        list.innerHTML = "";
+        candidats.forEach(c => {
+            const li = document.createElement("li");
+            li.className = "sidebar-item px-4 py-3";
+            li.setAttribute("data-id", c.id);
 
-        const ini = ((c.prenom || "")[0] || "") + ((c.nom || "")[0] || "");
-        li.innerHTML = `
-            <div class="flex items-center gap-3">
-                <div class="avatar w-9 h-9">${ini.toUpperCase()}</div>
-                <div class="min-w-0 flex-1">
-                    <p class="font-semibold text-gray-700 text-[13px] truncate">${c.prenom || ""} ${c.nom || ""}</p>
-                    <div class="flex items-center gap-1.5 mt-0.5">
-                        ${dateStr ? `<span class="text-[10px] text-gray-400">${dateStr}</span>` : ""}
-                        ${c.profil_psy ? `<span class="text-[10px] font-bold text-brand-600 bg-brand-50 px-1.5 py-0.5 rounded">${c.profil_psy}</span>` : ""}
+            let dateStr = "";
+            const ts = c.dateDerniereObservation || c.dateInscription;
+            if (ts) {
+                const d = ts.toDate ? ts.toDate() : new Date(ts);
+                dateStr = d.toLocaleDateString("fr-FR", { day: "2-digit", month: "short" });
+            }
+
+            const ini = ((c.prenom || "")[0] || "") + ((c.nom || "")[0] || "");
+            li.innerHTML = `
+                <div class="flex items-center gap-3">
+                    <div class="avatar w-9 h-9">${ini.toUpperCase()}</div>
+                    <div class="min-w-0 flex-1">
+                        <p class="font-semibold text-gray-700 text-[13px] truncate">${c.prenom || ""} ${c.nom || ""}</p>
+                        <div class="flex items-center gap-1.5 mt-0.5">
+                            ${dateStr ? `<span class="text-[10px] text-gray-400">${dateStr}</span>` : ""}
+                            ${c.profil_psy ? `<span class="text-[10px] font-bold text-brand-600 bg-brand-50 px-1.5 py-0.5 rounded">${c.profil_psy}</span>` : ""}
+                        </div>
                     </div>
+                    <svg class="w-3.5 h-3.5 text-gray-300 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
                 </div>
-                <svg class="w-3.5 h-3.5 text-gray-300 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
-            </div>
-        `;
-        li.addEventListener("click", () => selectCandidat(c.id, li));
-        list.appendChild(li);
+            `;
+            li.addEventListener("click", () => selectCandidat(c.id, li));
+            list.appendChild(li);
+        });
     });
 }
 
@@ -138,13 +180,17 @@ function renderCandidatList(candidats) {
 // Search
 // ============================================================
 function setupSearch() {
-    document.getElementById("search-input").addEventListener("input", (e) => {
-        const q = e.target.value.toLowerCase().trim();
-        const filtered = q
-            ? allCandidats.filter(c => `${c.prenom} ${c.nom} ${c.email} ${c.profil_psy || ""}`.toLowerCase().includes(q))
-            : allCandidats;
-        renderCandidatList(filtered);
-        document.getElementById("candidat-count").textContent = `${filtered.length} candidat(s)`;
+    ["search-input", "search-input-mobile"].forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.addEventListener("input", (e) => {
+            const q = e.target.value.toLowerCase().trim();
+            const filtered = q
+                ? allCandidats.filter(c => `${c.prenom} ${c.nom} ${c.email} ${c.profil_psy || ""}`.toLowerCase().includes(q))
+                : allCandidats;
+            renderCandidatList(filtered);
+            updateCounts(filtered.length);
+        });
     });
 }
 
@@ -154,6 +200,12 @@ function setupSearch() {
 async function selectCandidat(id, liEl) {
     document.querySelectorAll(".sidebar-item").forEach(el => el.classList.remove("active"));
     liEl.classList.add("active");
+
+    // Highlight same candidate in the other list
+    document.querySelectorAll(`.sidebar-item[data-id="${id}"]`).forEach(el => el.classList.add("active"));
+
+    // Close mobile sidebar
+    if (window._closeMobileSidebar) window._closeMobileSidebar();
 
     const candidat = allCandidats.find(c => c.id === id);
     if (!candidat) return;
@@ -175,6 +227,10 @@ async function selectCandidat(id, liEl) {
     currentAverageScores = computeAverageScores(standObservations);
 
     renderBilan(candidat, standObservations);
+    showFab(true);
+
+    // Scroll to top on mobile
+    window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 // ============================================================
