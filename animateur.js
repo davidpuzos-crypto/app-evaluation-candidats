@@ -210,7 +210,7 @@ function showToast(message, type = "success") {
 // ============================================================
 async function loadCandidats() {
     const select = document.getElementById("select-candidat");
-    select.innerHTML = '<option value="">— Choisir un jeune —</option>';
+    select.innerHTML = '<option value="">— Choisir un candidat —</option>';
     try {
         const snap = await db.collection("candidats").orderBy("dateInscription", "desc").get();
         snap.forEach(doc => {
@@ -278,7 +278,7 @@ function setupObservationHandlers() {
 async function saveObservation() {
     const candidatId = document.getElementById("select-candidat").value;
     if (!candidatId) {
-        showToast("Veuillez choisir un jeune", "error");
+        showToast("Veuillez choisir un candidat", "error");
         return;
     }
     if (!Object.values(scores).some(v => v > 0)) {

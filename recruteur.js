@@ -846,7 +846,7 @@ function generatePDF(candidat, scoresAnimateur, scoresCandidat, notesAnimateur) 
         y = M;
     }
 
-    const disclaimerText = "Ce bilan est un outil de mediation, pas de classement. Les observations sont subjectives, liees au contexte d'une seance de jeu. Elles servent de point de depart pour accompagner le jeune dans son orientation.";
+    const disclaimerText = "Ce bilan est un outil de mediation, pas de classement. Les observations sont subjectives, liees au contexte d'une seance de jeu. Elles servent de point de depart pour accompagner le candidat dans son orientation.";
     pdf.setFont("helvetica", "normal");
     pdf.setFontSize(7);
     const dlines = pdf.splitTextToSize(disclaimerText, W - 14);
