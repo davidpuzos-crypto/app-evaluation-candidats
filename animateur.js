@@ -1,6 +1,3 @@
-// ============================================================
-// Referentiel des 14 savoir-etre
-// ============================================================
 const SAVOIR_ETRE = [
     { nom: "Capacité d'adaptation",  icon: "M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" },
     { nom: "Gestion du stress",      icon: "M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" },
@@ -20,41 +17,28 @@ const SAVOIR_ETRE = [
 
 const STAR_PATH = "M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z";
 
-const LABELS_QUALITATIFS = [
-    "",
-    "En émergence",
-    "En développement",
-    "Observé",
-    "Bien observé",
-    "Point fort"
-];
+const LABELS_QUALITATIFS = ["", "En émergence", "En développement", "Observé", "Bien observé", "Point fort"];
+const QLABEL_CLASSES = ["text-white/35", "ql-1", "ql-2", "ql-3", "ql-4", "ql-5"];
 
-const QLABEL_CLASSES = [
-    "text-white/35",
-    "ql-1",
-    "ql-2",
-    "ql-3",
-    "ql-4",
-    "ql-5"
+const STANDS = [
+    { id: "aeronautique-defense", nom: "Aéronautique & Défense", emoji: "✈️" },
+    { id: "batiment",             nom: "Bâtiment",               emoji: "🏗️" },
+    { id: "audio-visuel",        nom: "Audio-visuel",           emoji: "🎬" },
+    { id: "restauration",        nom: "Restauration",           emoji: "🍽️" }
 ];
 
 let scores = {};
 
-// ============================================================
-// Init
-// ============================================================
 document.addEventListener("DOMContentLoaded", () => {
+    initStandSelector();
     initSkillsGrid();
     loadCandidats();
     setupObservationHandlers();
     setupGuideToggle();
-    setupCandidatChange();
+    setupSelectionChange();
     updateProgress();
 });
 
-// ============================================================
-// Guide animateur (toggle)
-// ============================================================
 function setupGuideToggle() {
     const btn     = document.getElementById("guide-toggle");
     const body    = document.getElementById("guide-body");
@@ -65,14 +49,20 @@ function setupGuideToggle() {
     });
 }
 
-// ============================================================
-// Grille des competences
-// ============================================================
+function initStandSelector() {
+    const select = document.getElementById("select-stand");
+    STANDS.forEach(s => {
+        const opt = document.createElement("option");
+        opt.value = s.id;
+        opt.textContent = `${s.emoji} ${s.nom}`;
+        select.appendChild(opt);
+    });
+}
+
 function initSkillsGrid() {
     const grid = document.getElementById("skills-grid");
     SAVOIR_ETRE.forEach((skill, idx) => {
         scores[skill.nom] = 0;
-
         const row = document.createElement("div");
         row.className = "skill-row";
         row.style.animationDelay = (idx * 0.03) + "s";
@@ -109,14 +99,10 @@ function initSkillsGrid() {
             star.addEventListener("mouseleave", () => restoreRating(skill.nom));
             starsWrap.appendChild(star);
         }
-
         grid.appendChild(row);
     });
 }
 
-// ============================================================
-// Etoiles
-// ============================================================
 function setRating(skillName, value) {
     scores[skillName] = scores[skillName] === value ? 0 : value;
     updateStars(skillName, scores[skillName]);
@@ -161,23 +147,16 @@ function resetScores() {
     updateProgress();
 }
 
-// ============================================================
-// Barre de progression
-// ============================================================
 function updateProgress() {
     const observed = Object.values(scores).filter(v => v > 0).length;
     const total    = SAVOIR_ETRE.length;
     const pct      = Math.round((observed / total) * 100);
-
     const bar   = document.getElementById("progress-bar");
     const label = document.getElementById("progress-label");
     if (bar)   bar.style.width = pct + "%";
     if (label) label.textContent = `${observed} / ${total} observés`;
 }
 
-// ============================================================
-// Toast notifications
-// ============================================================
 function showToast(message, type = "success") {
     const container = document.getElementById("toast-container");
     const colors = {
@@ -190,24 +169,19 @@ function showToast(message, type = "success") {
         error:   '<path stroke-linecap="round" stroke-linejoin="round" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/>',
         info:    '<path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>'
     };
-
     const toast = document.createElement("div");
-    toast.className = `toast pointer-events-auto flex items-center gap-2.5 px-4 py-3 rounded-xl border backdrop-blur-sm shadow-lg text-sm font-medium max-w-[300px] ${colors[type]}`;
+    toast.className = `toast pointer-events-auto flex items-center gap-2.5 px-4 py-3 rounded-xl border backdrop-blur-sm shadow-lg text-sm font-medium max-w-[340px] ${colors[type]}`;
     toast.innerHTML = `
         <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">${icons[type]}</svg>
         <span>${message}</span>
     `;
     container.appendChild(toast);
-
     setTimeout(() => {
         toast.classList.add("hide");
         setTimeout(() => toast.remove(), 350);
     }, 3500);
 }
 
-// ============================================================
-// Chargement des candidats dans le selecteur
-// ============================================================
 async function loadCandidats() {
     const select = document.getElementById("select-candidat");
     select.innerHTML = '<option value="">— Choisir un candidat —</option>';
@@ -226,26 +200,67 @@ async function loadCandidats() {
     }
 }
 
-// ============================================================
-// Changement de candidat => charger observation existante
-// ============================================================
-function setupCandidatChange() {
-    document.getElementById("select-candidat").addEventListener("change", () => {
-        loadExistingObservation();
-    });
+function setupSelectionChange() {
+    document.getElementById("select-candidat").addEventListener("change", onSelectionChange);
+    document.getElementById("select-stand").addEventListener("change", onSelectionChange);
 }
 
-async function loadExistingObservation() {
-    const id = document.getElementById("select-candidat").value;
-    if (!id) { resetScores(); return; }
+async function onSelectionChange() {
+    const candidatId = document.getElementById("select-candidat").value;
+    const standId    = document.getElementById("select-stand").value;
+
+    if (candidatId) {
+        await loadStandBadges(candidatId);
+    } else {
+        document.getElementById("stand-badges").classList.add("hidden");
+    }
+
+    if (!candidatId || !standId) {
+        resetScores();
+        return;
+    }
+    await loadExistingObservation(candidatId, standId);
+}
+
+async function loadStandBadges(candidatId) {
+    const container = document.getElementById("stand-badges");
+    const list      = document.getElementById("stand-badges-list");
+    list.innerHTML = "";
 
     try {
-        const snap = await db.collection("candidats").doc(id)
-            .collection("observations").orderBy("dateObservation", "desc").limit(1).get();
+        const obsSnap = await db.collection("candidats").doc(candidatId)
+            .collection("observations").get();
+        const doneStands = new Set();
+        obsSnap.forEach(doc => doneStands.add(doc.id));
 
-        if (!snap.empty) {
-            const obs = snap.docs[0].data();
-            const obsScores = obs.scores_animateur || obs.scores || {};
+        STANDS.forEach(s => {
+            const done = doneStands.has(s.id);
+            const badge = document.createElement("span");
+            badge.className = done
+                ? "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+                : "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-medium bg-white/5 text-white/40 border border-white/10";
+            const icon = done
+                ? '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>'
+                : '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/></svg>';
+            badge.innerHTML = `${icon} ${s.emoji} ${s.nom}`;
+            list.appendChild(badge);
+        });
+
+        container.classList.remove("hidden");
+    } catch (err) {
+        console.error("Erreur chargement badges :", err);
+    }
+}
+
+async function loadExistingObservation(candidatId, standId) {
+    resetScores();
+    try {
+        const doc = await db.collection("candidats").doc(candidatId)
+            .collection("observations").doc(standId).get();
+
+        if (doc.exists) {
+            const obs = doc.data();
+            const obsScores = obs.scores_animateur || {};
             SAVOIR_ETRE.forEach(skill => {
                 scores[skill.nom] = obsScores[skill.nom] || 0;
                 updateStars(skill.nom, scores[skill.nom]);
@@ -254,19 +269,14 @@ async function loadExistingObservation() {
             const notes = document.getElementById("notes-animateur");
             if (notes) notes.value = obs.notesAnimateur || "";
             updateProgress();
-            showToast("Observations précédentes chargées", "info");
-        } else {
-            resetScores();
+            const stand = STANDS.find(s => s.id === standId);
+            showToast(`Observation précédente chargée (${stand ? stand.nom : standId})`, "info");
         }
     } catch (err) {
         console.error("Erreur chargement observation :", err);
-        resetScores();
     }
 }
 
-// ============================================================
-// Sauvegarde de l'observation + boutons
-// ============================================================
 function setupObservationHandlers() {
     document.getElementById("btn-save-observation").addEventListener("click", saveObservation);
     document.getElementById("btn-reset-scores").addEventListener("click", () => {
@@ -276,7 +286,13 @@ function setupObservationHandlers() {
 }
 
 async function saveObservation() {
+    const standId    = document.getElementById("select-stand").value;
     const candidatId = document.getElementById("select-candidat").value;
+
+    if (!standId) {
+        showToast("Veuillez choisir un stand", "error");
+        return;
+    }
     if (!candidatId) {
         showToast("Veuillez choisir un candidat", "error");
         return;
@@ -290,25 +306,28 @@ async function saveObservation() {
     btn.disabled = true;
     btn.innerHTML = '<svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> Enregistrement...';
 
+    const stand = STANDS.find(s => s.id === standId);
     const notesAnimateur = (document.getElementById("notes-animateur") || {}).value || "";
 
     try {
-        // Save observation as sub-collection doc with scores_animateur field
-        await db.collection("candidats").doc(candidatId).collection("observations").add({
-            candidatId,
-            scores_animateur: { ...scores },
-            notesAnimateur,
-            dateObservation: firebase.firestore.FieldValue.serverTimestamp()
-        });
+        await db.collection("candidats").doc(candidatId)
+            .collection("observations").doc(standId).set({
+                candidatId,
+                stand: stand.nom,
+                standId,
+                scores_animateur: { ...scores },
+                notesAnimateur,
+                dateObservation: firebase.firestore.FieldValue.serverTimestamp()
+            });
 
-        // Update parent candidat doc
         await db.collection("candidats").doc(candidatId).update({
-            dernieresNotesAnimateur: { ...scores },
-            notesAnimateur,
+            [`stands_${standId}`]: { ...scores },
+            [`notes_${standId}`]: notesAnimateur,
             dateDerniereObservation: firebase.firestore.FieldValue.serverTimestamp()
         });
 
-        showToast("Observation enregistrée ! Modifiable à tout moment.");
+        showToast(`Observation enregistrée — ${stand.emoji} ${stand.nom}`);
+        await loadStandBadges(candidatId);
     } catch (err) {
         console.error("Erreur sauvegarde :", err);
         showToast("Erreur lors de l'enregistrement", "error");
