@@ -50,16 +50,6 @@ const PERSONALITY_PROFILES = {
 };
 
 // ============================================================
-// Pistes d'orientation
-// ============================================================
-const SECTEURS = [
-    { nom: "Aéronautique & Défense", emoji: "✈️", description: "Précision, calme sous pression, sens de l'organisation", competences: ["Rigueur", "Gestion du stress", "Prise de décision"], labels: ["Rigueur", "Gestion du stress", "Sens de l'organisation"] },
-    { nom: "Restauration",           emoji: "🍽️", description: "Réactivité, esprit d'équipe, relation client",           competences: ["Gestion des conflits", "Travail en équipe", "Communication"], labels: ["Réactivité", "Travail en équipe", "Communication"] },
-    { nom: "Bâtiment",               emoji: "🏗️", description: "Endurance, autonomie, adaptation au terrain",             competences: ["Persévérance", "Autonomie", "Capacité d'adaptation"], labels: ["Persévérance", "Autonomie", "Adaptation"] },
-    { nom: "Audio-visuel",           emoji: "🎬",  description: "Créativité, curiosité, fédérer une équipe",               competences: ["Esprit critique", "Créativité", "Leadership"], labels: ["Force de proposition", "Curiosité", "Fédérer"] }
-];
-
-// ============================================================
 // State
 // ============================================================
 let allCandidats = [];
@@ -295,7 +285,6 @@ function renderBilan(candidat, standObservations) {
     renderSuperPouvoirs(currentAverageScores);
     renderComparativeTable(currentScoresCandidat, standObservations, currentAverageScores);
     renderRadar(currentAverageScores, currentScoresCandidat);
-    renderSecteurs(currentAverageScores);
 }
 
 function toggleLink(btnId, url) {
@@ -437,8 +426,7 @@ function renderSuperPouvoirs(avgScores) {
                 <div class="w-7 h-7 rounded-lg bg-amber-50 flex items-center justify-center flex-shrink-0">
                     <span class="text-sm">⚡</span>
                 </div>
-                Ses Super-Pouvoirs sur le terrain
-                <span class="text-[10px] font-normal text-gray-400 ml-1">— Top 3 des savoir-être observés par les animateurs</span>
+                Top 3 des savoir-être observés par les facilitateurs
             </h3>
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 ${ranked.map((skill, idx) => {
@@ -645,61 +633,6 @@ function renderRadar(avgScores, scoresCandidat) {
 }
 
 // ============================================================
-// Sectors
-// ============================================================
-function calculateMatch(scores, secteur) {
-    if (!scores) return 0;
-    return Math.round(secteur.competences.reduce((sum, c) => sum + (scores[c] || 0), 0) / 15 * 100);
-}
-
-function getBarStyle(pct) {
-    if (pct > 75) return { fill: "bg-emerald-500", bg: "bg-emerald-50", textClass: "text-emerald-700", msg: "Forte affinité" };
-    if (pct >= 50) return { fill: "bg-amber-500", bg: "bg-amber-50", textClass: "text-amber-700", msg: "Affinité modérée" };
-    return { fill: "bg-gray-400", bg: "bg-gray-50", textClass: "text-gray-500", msg: "À explorer" };
-}
-
-function renderSecteurs(scores) {
-    const container = document.getElementById("secteurs-container");
-    container.innerHTML = "";
-
-    const sorted = [...SECTEURS].map(s => ({ ...s, pct: calculateMatch(scores, s) }))
-        .sort((a, b) => b.pct - a.pct);
-
-    sorted.forEach((s, idx) => {
-        const style = getBarStyle(s.pct);
-        const block = document.createElement("div");
-        block.className = `rounded-xl p-3.5 border border-gray-100 ${style.bg}`;
-        block.style.cssText = `animation:fadeUp 0.4s ease forwards; animation-delay:${idx * 0.08}s; opacity:0;`;
-
-        block.innerHTML = `
-            <div class="flex items-center justify-between mb-2">
-                <div class="flex items-center gap-2">
-                    <span class="text-lg">${s.emoji}</span>
-                    <div>
-                        <span class="font-bold text-gray-700 text-sm">${s.nom}</span>
-                        <p class="text-[10px] text-gray-400 mt-0.5">${s.description}</p>
-                    </div>
-                </div>
-                <div class="text-right flex-shrink-0 ml-2">
-                    <span class="text-lg font-extrabold ${style.textClass}">${s.pct}%</span>
-                    <p class="text-[10px] ${style.textClass} font-semibold">${style.msg}</p>
-                </div>
-            </div>
-            <div class="w-full bg-gray-200 rounded-full h-2.5 mb-2">
-                <div class="progress-fill ${style.fill} h-2.5 rounded-full" style="width:0%"></div>
-            </div>
-            <div class="flex flex-wrap gap-1">
-                ${s.labels.map(l => `<span class="text-[10px] bg-white border border-gray-200 text-gray-500 px-2 py-0.5 rounded-full">${l}</span>`).join("")}
-            </div>
-        `;
-        container.appendChild(block);
-        requestAnimationFrame(() => {
-            block.querySelector(".progress-fill").style.width = s.pct + "%";
-        });
-    });
-}
-
-// ============================================================
 // PDF Export — jsPDF direct rendering
 // ============================================================
 function cleanText(s) {
@@ -792,7 +725,7 @@ function generatePDF(candidat, standObservations, scoresCandidat, avgScores) {
         pdf.setFont("helvetica", "bold");
         pdf.setFontSize(10);
         pdf.setTextColor(31, 41, 55);
-        pdf.text("Ses Super-Pouvoirs sur le terrain", M, y + 4);
+        pdf.text("Top 3 des savoir-etre observes par les facilitateurs", M, y + 4);
         y += 7;
 
         const cardW = (W - 6) / 3;
@@ -905,91 +838,31 @@ function generatePDF(candidat, standObservations, scoresCandidat, avgScores) {
     // ---- RADAR ----
     if (y > PH - 100) { pdf.addPage(); y = M; }
 
-    const colTop = y;
-    const radarW = 90, radarH = 90;
-    const secX = M + radarW + 5;
-    const secW = W - radarW - 5;
+    const radarW = 110, radarH = 90;
+    const radarX = M + (W - radarW) / 2;
 
     pdf.setFillColor(255, 255, 255);
     pdf.setDrawColor(229, 231, 235);
     pdf.setLineWidth(0.3);
-    pdf.roundedRect(M, y, radarW, radarH, 2, 2, "FD");
+    pdf.roundedRect(radarX, y, radarW, radarH, 2, 2, "FD");
 
     pdf.setFont("helvetica", "bold");
     pdf.setFontSize(9);
     pdf.setTextColor(31, 41, 55);
-    pdf.text("Profil des savoir-etre", M + 4, y + 6);
+    pdf.text("Profil des savoir-etre", radarX + 4, y + 6);
 
     const hasRadarData = avgScores && Object.values(avgScores).some(v => v > 0);
     if (hasRadarData && radarChart) {
         const img = radarChart.toBase64Image("image/png", 1.0);
-        pdf.addImage(img, "PNG", M + 2, y + 8, radarW - 4, radarH - 14);
+        pdf.addImage(img, "PNG", radarX + 5, y + 8, radarW - 10, radarH - 14);
     } else {
         pdf.setFont("helvetica", "italic");
         pdf.setFontSize(8);
         pdf.setTextColor(156, 163, 175);
-        pdf.text("Aucune observation enregistree", M + 6, y + radarH / 2);
+        pdf.text("Aucune observation enregistree", radarX + 6, y + radarH / 2);
     }
 
-    // Sectors
-    pdf.setFont("helvetica", "bold");
-    pdf.setFontSize(9);
-    pdf.setTextColor(31, 41, 55);
-    pdf.text("Pistes d'orientation", secX, y + 6);
-
-    const sorted = [...SECTEURS].map(s => ({
-        ...s,
-        pct: avgScores ? Math.round(s.competences.reduce((sum, k) => sum + (avgScores[k] || 0), 0) / 15 * 100) : 0
-    })).sort((a, b) => b.pct - a.pct);
-
-    let sy = y + 12;
-    const cardH = 19;
-
-    sorted.forEach(s => {
-        let bg, txt, bar;
-        if (s.pct > 75) { bg = [236, 253, 245]; txt = [4, 120, 87]; bar = [16, 185, 129]; }
-        else if (s.pct >= 50) { bg = [255, 251, 235]; txt = [180, 83, 9]; bar = [245, 158, 11]; }
-        else { bg = [249, 250, 251]; txt = [75, 85, 99]; bar = [156, 163, 175]; }
-
-        pdf.setFillColor(bg[0], bg[1], bg[2]);
-        pdf.setDrawColor(229, 231, 235);
-        pdf.setLineWidth(0.3);
-        pdf.roundedRect(secX, sy, secW, cardH, 2, 2, "FD");
-
-        pdf.setFont("helvetica", "bold");
-        pdf.setFontSize(9);
-        pdf.setTextColor(31, 41, 55);
-        pdf.text(cleanText(s.nom), secX + 3, sy + 5);
-
-        pdf.setFont("helvetica", "bold");
-        pdf.setFontSize(11);
-        pdf.setTextColor(txt[0], txt[1], txt[2]);
-        const pctTxt = s.pct + "%";
-        const pctW = pdf.getTextWidth(pctTxt);
-        pdf.text(pctTxt, secX + secW - pctW - 3, sy + 5.5);
-
-        pdf.setFont("helvetica", "normal");
-        pdf.setFontSize(6.5);
-        pdf.setTextColor(107, 114, 128);
-        pdf.text(cleanText(s.description), secX + 3, sy + 9);
-
-        const barX = secX + 3, barY = sy + 11.5, barW = secW - 6;
-        pdf.setFillColor(229, 231, 235);
-        pdf.roundedRect(barX, barY, barW, 2, 1, 1, "F");
-        if (s.pct > 0) {
-            pdf.setFillColor(bar[0], bar[1], bar[2]);
-            pdf.roundedRect(barX, barY, barW * (s.pct / 100), 2, 1, 1, "F");
-        }
-
-        pdf.setFont("helvetica", "normal");
-        pdf.setFontSize(6);
-        pdf.setTextColor(107, 114, 128);
-        pdf.text(s.labels.map(cleanText).join(" - "), secX + 3, sy + 17);
-
-        sy += cardH + 2;
-    });
-
-    y = colTop + Math.max(radarH, sy - colTop) + 5;
+    y += radarH + 5;
 
     // ---- DISCLAIMER ----
     if (y > PH - 20) { pdf.addPage(); y = M; }
