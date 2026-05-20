@@ -58,7 +58,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // ============================================================
-// Guide animateur (toggle)
+// Guide facilitateur (toggle)
 // ============================================================
 function setupGuideToggle() {
     const btn     = document.getElementById("guide-toggle");

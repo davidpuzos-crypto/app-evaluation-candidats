@@ -466,7 +466,7 @@ function generatePDF(candidat, scores, notesAnimateur) {
 
     y += headerH + 5;
 
-    // ═══════════ NOTES ANIMATEUR ═══════════
+    // ═══════════ NOTES FACILITATEUR ═══════════
     if (notesAnimateur) {
         const clean = cleanText(notesAnimateur);
         pdf.setFont("helvetica", "italic");
@@ -482,7 +482,7 @@ function generatePDF(candidat, scores, notesAnimateur) {
         pdf.setFont("helvetica", "bold");
         pdf.setFontSize(8);
         pdf.setTextColor(180, 83, 9);                       // #b45309 amber-700
-        pdf.text("NOTES DE L'ANIMATEUR", M + 4, y + 5);
+        pdf.text("NOTES DU FACILITATEUR", M + 4, y + 5);
 
         pdf.setFont("helvetica", "italic");
         pdf.setFontSize(9);

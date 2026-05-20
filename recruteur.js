@@ -356,7 +356,7 @@ function renderStandNotes(standObservations) {
             <div class="flex items-start gap-2.5">
                 <svg class="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                 <div class="flex-1">
-                    <p class="text-xs font-bold text-amber-700 mb-2">Notes des animateurs</p>
+                    <p class="text-xs font-bold text-amber-700 mb-2">Notes des facilitateurs</p>
                     ${notes.map(n => `
                         <div class="mb-1.5 last:mb-0">
                             <span class="text-[11px] font-bold text-amber-600">${n.stand.emoji} ${n.stand.nom} :</span>
@@ -552,7 +552,7 @@ function renderRadar(avgScores, scoresCandidat) {
     const datasets = [];
     if (hasAvg) {
         datasets.push({
-            label: "Moyenne terrain (animateurs)",
+            label: "Moyenne terrain (facilitateurs)",
             data: SAVOIR_ETRE.map(s => avgScores[s] || 0),
             backgroundColor: "rgba(139,92,246,0.12)",
             borderColor: "rgba(124,58,237,0.7)",
