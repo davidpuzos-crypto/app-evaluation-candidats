@@ -1,5 +1,5 @@
 // ============================================================
-// Recruteur — Anti-CV bienveillant
+// Recruteur — CV soft-skills
 // ============================================================
 
 const SAVOIR_ETRE = [
@@ -752,7 +752,7 @@ function generatePDF(candidat, standObservations, scoresCandidat, avgScores) {
     pdf.setFont("helvetica", "normal");
     pdf.setFontSize(8);
     pdf.setTextColor(220, 215, 255);
-    pdf.text("Anti-CV bienveillant - Forum emploi ludique", M + 6, y + 13);
+    pdf.text("CV soft-skills - Forum emploi ludique", M + 6, y + 13);
 
     pdf.setFontSize(8);
     pdf.setTextColor(255, 255, 255);
@@ -994,7 +994,7 @@ function generatePDF(candidat, standObservations, scoresCandidat, avgScores) {
     // ---- DISCLAIMER ----
     if (y > PH - 20) { pdf.addPage(); y = M; }
 
-    const disclaimerText = "Cet Anti-CV est un outil de mediation, pas de classement. Les observations sont subjectives, liees au contexte de seances de jeu. Elles servent de point de depart pour accompagner le candidat dans son orientation.";
+    const disclaimerText = "Ce CV soft-skills est un outil de mediation, pas de classement. Les observations sont subjectives, liees au contexte de seances de jeu. Elles servent de point de depart pour accompagner le candidat dans son orientation.";
     pdf.setFont("helvetica", "normal");
     pdf.setFontSize(7);
     const dlines = pdf.splitTextToSize(disclaimerText, W - 14);
@@ -1020,7 +1020,7 @@ function generatePDF(candidat, standObservations, scoresCandidat, avgScores) {
     pdf.setFontSize(7);
     pdf.setTextColor(156, 163, 175);
     const dateStr = new Date().toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" });
-    pdf.text(`SoftSkill Observer - Anti-CV bienveillant - Genere le ${dateStr}`, PW / 2, PH - 5, { align: "center" });
+    pdf.text(`SoftSkill Observer - CV soft-skills - Genere le ${dateStr}`, PW / 2, PH - 5, { align: "center" });
 
     pdf.save(`AntiCV_${cleanText(candidat.prenom || "")}_${cleanText(candidat.nom || "")}.pdf`);
 }
