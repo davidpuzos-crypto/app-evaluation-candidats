@@ -120,6 +120,8 @@ async function loadCandidats() {
         snap.forEach(doc => allCandidats.push({ id: doc.id, ...doc.data() }));
         renderCandidatList(allCandidats);
         updateCounts(allCandidats.length);
+        updateWelcomeStats();
+        renderQuickPicks();
     } catch (err) {
         console.error("Erreur chargement candidats :", err);
         getListEls().forEach(el => {
@@ -137,6 +139,61 @@ function updateCounts(count) {
     ["candidat-count", "candidat-count-mobile"].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.textContent = txt;
+    });
+}
+
+function updateWelcomeStats() {
+    // Update stat-candidats
+    const statCandidats = document.getElementById("stat-candidats");
+    if (statCandidats) {
+        statCandidats.textContent = allCandidats.length;
+        statCandidats.classList.add("stat-animated");
+    }
+
+    // Update stat-observes (candidates with dateDerniereObservation)
+    const statObserves = document.getElementById("stat-observes");
+    if (statObserves) {
+        const observedCount = allCandidats.filter(c => c.dateDerniereObservation).length;
+        statObserves.textContent = observedCount;
+        statObserves.classList.add("stat-animated");
+    }
+
+    // Update header-count pill
+    const headerCount = document.getElementById("header-count");
+    if (headerCount) {
+        headerCount.textContent = allCandidats.length;
+        headerCount.classList.remove("hidden");
+    }
+}
+
+function renderQuickPicks() {
+    const container = document.getElementById("quick-picks");
+    const wrapper = document.getElementById("quick-picks-wrapper");
+    if (!container || !wrapper || !allCandidats.length) return;
+
+    const recent = allCandidats.slice(0, 6);
+    wrapper.classList.remove("hidden");
+
+    container.innerHTML = recent.map(c => {
+        const ini = ((c.prenom || "")[0] || "") + ((c.nom || "")[0] || "");
+        return `
+            <button class="quick-pick-card bg-white rounded-xl border border-gray-200 p-3 sm:p-4 flex items-center gap-3 hover:border-brand-300 hover:shadow-md transition-all text-left w-full" data-candidat-id="${c.id}">
+                <div class="avatar w-10 h-10 text-sm">${ini.toUpperCase()}</div>
+                <div class="min-w-0 flex-1">
+                    <p class="font-semibold text-gray-700 text-sm truncate">${c.prenom || ""} ${c.nom || ""}</p>
+                    ${c.profil_psy ? `<span class="text-[10px] font-bold text-brand-600 bg-brand-50 px-1.5 py-0.5 rounded">${c.profil_psy}</span>` : '<span class="text-[10px] text-gray-400">Pas de profil MBTI</span>'}
+                </div>
+                <svg class="w-4 h-4 text-gray-300 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+            </button>
+        `;
+    }).join("");
+
+    container.querySelectorAll("[data-candidat-id]").forEach(btn => {
+        btn.addEventListener("click", () => {
+            const id = btn.getAttribute("data-candidat-id");
+            const li = document.querySelector(`.sidebar-item[data-id="${id}"]`);
+            if (li) selectCandidat(id, li);
+        });
     });
 }
 
@@ -217,10 +274,9 @@ async function selectCandidat(id, liEl) {
     updateHeaderName(candidat);
 
     const container = document.getElementById("bilan-container");
-    const emptyState = document.getElementById("empty-state");
     container.classList.add("hidden");
-    emptyState.classList.remove("hidden");
-    emptyState.innerHTML = '<div class="flex flex-col items-center justify-center min-h-[40vh]"><div class="w-10 h-10 border-4 border-brand-200 border-t-brand-600 rounded-full animate-spin mb-4"></div><p class="text-sm text-gray-400">Chargement du bilan...</p></div>';
+    document.getElementById("empty-state").classList.add("hidden");
+    document.getElementById("loading-overlay").classList.remove("hidden");
 
     const standObservations = {};
     try {
@@ -237,8 +293,7 @@ async function selectCandidat(id, liEl) {
     currentScoresCandidat = candidat.scores_candidat || null;
     currentAverageScores = computeAverageScores(standObservations);
 
-    const emptyEl = document.getElementById("empty-state");
-    emptyEl.innerHTML = '';
+    document.getElementById("loading-overlay").classList.add("hidden");
 
     renderBilan(candidat, standObservations);
     showFab(true);
