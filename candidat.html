@@ -91,9 +91,12 @@
 
         /* ── Skill rows ── */
         .skill-row {
-            display:flex; align-items:center; justify-content:space-between;
+            display:flex; flex-direction:column; gap:8px;
             padding:14px 18px; transition:background 0.15s;
             border-bottom:1px solid rgba(255,255,255,0.08);
+        }
+        @media (min-width: 640px) {
+            .skill-row { flex-direction:row; align-items:center; justify-content:space-between; gap:0; }
         }
         .skill-row:last-child { border-bottom:none; }
         .skill-row:hover { background:rgba(139,92,246,0.07); }
@@ -395,6 +398,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics-compat.js"></script>
     <script src="firebase-config.js?v=2"></script>
-    <script src="candidat.js?v=5"></script>
+    <script src="candidat.js?v=6"></script>
 </body>
 </html>

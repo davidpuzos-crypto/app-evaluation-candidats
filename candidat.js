@@ -63,7 +63,7 @@ function initSkillsGrid() {
         row.style.animationDelay = (idx * 0.03) + "s";
 
         row.innerHTML = `
-            <div class="flex items-center gap-3 min-w-0 flex-1">
+            <div class="flex items-center gap-3 min-w-0 sm:flex-1">
                 <div class="w-9 h-9 rounded-lg bg-white/8 border border-white/10 flex items-center justify-center flex-shrink-0">
                     <svg class="w-4 h-4 text-brand-400/85" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="${skill.icon}"/>
@@ -72,10 +72,12 @@ function initSkillsGrid() {
                 <div class="min-w-0">
                     <span class="font-semibold text-white/90 text-[14px] block leading-tight">${skill.nom}</span>
                     <span class="text-[11px] text-white/35 block mt-0.5 leading-snug">${skill.desc}</span>
-                    <span class="text-[12px] text-white/45 block mt-1 font-medium qualitative-label" data-qlabel="${skill.nom}">Pas encore renseigné</span>
                 </div>
             </div>
-            <div class="flex items-center gap-1 flex-shrink-0 ml-3" data-stars="${skill.nom}"></div>
+            <div class="flex items-center justify-between pl-12 sm:pl-0 sm:ml-3 sm:flex-col sm:items-end sm:gap-1 sm:flex-shrink-0">
+                <span class="text-[12px] text-white/45 font-medium qualitative-label order-2 sm:order-2" data-qlabel="${skill.nom}">Pas encore renseigné</span>
+                <div class="flex items-center gap-1 order-1 sm:order-1" data-stars="${skill.nom}"></div>
+            </div>
         `;
 
         const starsWrap = row.querySelector(`[data-stars="${skill.nom}"]`);
