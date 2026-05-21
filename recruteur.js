@@ -552,7 +552,10 @@ function getStandDotsHTML(skill, standObservations) {
             return '';
         }
         const colors = SCORE_COLORS[score];
-        return `<span class="stand-dot" style="background:${colors.bg};color:${colors.text};border:1px solid ${colors.border}" title="${stand.nom} : ${score}/5 — ${LABELS_QUALITATIFS[score]}">${score}</span>`;
+        return `<span class="stand-dot" style="background:${colors.bg};color:${colors.text};border:1px solid ${colors.border}" title="${stand.nom} : ${score}/5 — ${LABELS_QUALITATIFS[score]}">
+            <span class="stand-dot-emoji">${stand.emoji}</span>
+            <span class="stand-dot-score">${score}/5</span>
+        </span>`;
     }).join("");
 }
 
