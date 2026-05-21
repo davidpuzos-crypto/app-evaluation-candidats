@@ -219,16 +219,16 @@
 
             <!-- Empty state — rich welcome screen -->
             <div id="empty-state" class="flex flex-col items-center justify-center min-h-[60vh] lg:h-full fade-up">
-                <div class="w-full max-w-3xl mx-auto px-2 sm:px-0 py-6 sm:py-10">
+                <div class="w-full max-w-3xl mx-auto px-2 sm:px-0 pt-2 pb-6 sm:pt-4 sm:pb-10">
 
                     <!-- Hero header -->
                     <div class="text-center mb-8 sm:mb-10">
                         <div class="inline-flex items-center gap-2 bg-brand-50 border border-brand-100 rounded-full px-4 py-1.5 mb-4">
-                            <span class="text-sm">🎯</span>
-                            <span class="text-[11px] font-bold text-brand-600 uppercase tracking-wider">Forum emploi ludique</span>
+                            <span class="text-sm">📋</span>
+                            <span class="text-[11px] font-bold text-brand-600 uppercase tracking-wider">CV Soft-Skills</span>
                         </div>
-                        <h2 class="text-2xl sm:text-3xl lg:text-4xl font-extrabold leading-tight mb-3 welcome-gradient">Espace de m&eacute;diation<br>par les savoir-&ecirc;tre</h2>
-                        <p class="text-sm sm:text-base text-gray-500 max-w-xl mx-auto leading-relaxed px-2">Ce n'est pas un CV classique &mdash; c'est un profil construit &agrave; travers le jeu, l'observation terrain et l'auto-perception du candidat.</p>
+                        <h2 class="text-2xl sm:text-3xl lg:text-4xl font-extrabold leading-tight mb-3 welcome-gradient">D&eacute;couvrez le potentiel humain<br>de chaque candidat</h2>
+                        <p class="text-sm sm:text-base text-gray-500 max-w-xl mx-auto leading-relaxed px-2">Bien plus qu'un CV : chaque profil combine <strong class="text-gray-600">auto-&eacute;valuation</strong>, <strong class="text-gray-600">observation en situation r&eacute;elle</strong> et <strong class="text-gray-600">analyse comportementale</strong> pour vous r&eacute;v&eacute;ler les comp&eacute;tences humaines qui ne figurent sur aucun dipl&ocirc;me.</p>
                     </div>
 
                     <!-- Feature cards -->
@@ -236,17 +236,17 @@
                         <div class="feature-card text-center">
                             <div class="text-3xl mb-3">🎯</div>
                             <h3 class="font-bold text-gray-700 text-sm mb-1.5">Auto-&eacute;valuation</h3>
-                            <p class="text-[12px] text-gray-500 leading-relaxed">Le candidat &eacute;value ses propres savoir-&ecirc;tre : comment il se per&ccedil;oit au quotidien</p>
+                            <p class="text-[12px] text-gray-500 leading-relaxed">Le candidat &eacute;value lui-m&ecirc;me 14 savoir-&ecirc;tre cl&eacute;s : un premier indicateur de conscience de soi</p>
                         </div>
                         <div class="feature-card text-center">
                             <div class="text-3xl mb-3">👁️</div>
                             <h3 class="font-bold text-gray-700 text-sm mb-1.5">Observation terrain</h3>
-                            <p class="text-[12px] text-gray-500 leading-relaxed">Les facilitateurs observent le candidat en situation de jeu sur 4 stands th&eacute;matiques</p>
+                            <p class="text-[12px] text-gray-500 leading-relaxed">Des facilitateurs &eacute;valuent le candidat en situation r&eacute;elle sur 4 ateliers th&eacute;matiques</p>
                         </div>
                         <div class="feature-card text-center">
                             <div class="text-3xl mb-3">🧭</div>
                             <h3 class="font-bold text-gray-700 text-sm mb-1.5">Boussole</h3>
-                            <p class="text-[12px] text-gray-500 leading-relaxed">La comparaison auto vs terrain r&eacute;v&egrave;le les p&eacute;pites cach&eacute;es et la conscience de soi</p>
+                            <p class="text-[12px] text-gray-500 leading-relaxed">Le croisement auto / terrain r&eacute;v&egrave;le les talents cach&eacute;s et le niveau de lucidit&eacute; du candidat</p>
                         </div>
                     </div>
 
@@ -254,18 +254,18 @@
                     <div class="flex items-center justify-center gap-6 sm:gap-10 mb-8 sm:mb-10">
                         <div class="text-center">
                             <span id="stat-candidats" class="block text-2xl sm:text-3xl font-extrabold text-brand-600">&mdash;</span>
-                            <span class="text-[11px] sm:text-xs text-gray-400 font-medium">candidats inscrits</span>
+                            <span class="text-[11px] sm:text-xs text-gray-400 font-medium">candidats &eacute;valu&eacute;s</span>
                         </div>
                         <div class="w-px h-10 bg-gray-200"></div>
                         <div class="text-center">
                             <span id="stat-observes" class="block text-2xl sm:text-3xl font-extrabold text-brand-600">&mdash;</span>
-                            <span class="text-[11px] sm:text-xs text-gray-400 font-medium">bilans disponibles</span>
+                            <span class="text-[11px] sm:text-xs text-gray-400 font-medium">CV soft-skills disponibles</span>
                         </div>
                     </div>
 
                     <!-- Quick picks (populated by JS) -->
                     <div id="quick-picks-wrapper" class="hidden mb-8 sm:mb-10">
-                        <p class="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3 text-center">Derniers candidats inscrits</p>
+                        <p class="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3 text-center">Candidats r&eacute;cents</p>
                         <div id="quick-picks" class="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3"></div>
                     </div>
 
@@ -273,14 +273,14 @@
                     <div class="text-center mb-8 sm:mb-10">
                         <button id="btn-select-mobile" class="lg:hidden bg-gradient-to-r from-brand-600 to-indigo-600 text-white px-8 py-4 rounded-2xl font-bold text-base flex items-center gap-3 shadow-xl shadow-brand-500/25 mx-auto transition-transform hover:scale-[1.02] active:scale-[0.98]" style="min-height:56px;">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                            Choisir un candidat
+                            Consulter un profil
                         </button>
-                        <p class="hidden lg:block text-sm text-gray-400 mt-2">S&eacute;lectionnez un candidat dans la liste &agrave; gauche</p>
+                        <p class="hidden lg:block text-sm text-gray-400 mt-2">S&eacute;lectionnez un candidat dans la liste &agrave; gauche pour d&eacute;couvrir son profil</p>
                     </div>
 
                     <!-- Disclaimer -->
                     <div class="bg-gray-50 border border-gray-200 rounded-xl px-4 sm:px-5 py-3 text-center max-w-xl mx-auto">
-                        <p class="text-[11px] text-gray-400 leading-relaxed">Cet outil est un support de discussion, pas un outil de classement. Les observations sont subjectives et li&eacute;es au contexte de s&eacute;ances de jeu.</p>
+                        <p class="text-[11px] text-gray-400 leading-relaxed">Cet outil compl&egrave;te votre processus de recrutement. Les savoir-&ecirc;tre sont &eacute;valu&eacute;s en situation de jeu : un &eacute;clairage suppl&eacute;mentaire, pas un verdict.</p>
                     </div>
 
                 </div>
@@ -397,13 +397,17 @@
                     </div>
                 </div>
 
-                <!-- Export PDF button -->
+                <!-- Export CTA -->
                 <div class="no-print mb-8 pb-safe">
-                    <button id="btn-export-pdf"
-                        class="w-full bg-gradient-to-r from-brand-600 to-indigo-600 text-white py-3.5 px-6 rounded-xl font-bold text-sm hover:from-brand-700 hover:to-indigo-700 transition-all flex items-center justify-center gap-2 shadow-lg shadow-brand-500/20" style="min-height:48px;">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17v3a2 2 0 002 2h14a2 2 0 002-2v-3"/></svg>
-                        Exporter en PDF
-                    </button>
+                    <div class="bg-gradient-to-r from-brand-50 to-indigo-50 border border-brand-200 rounded-2xl p-5 sm:p-6 text-center">
+                        <p class="text-base sm:text-lg font-bold text-gray-700 mb-1">Ce profil vous a plu&nbsp;?</p>
+                        <p class="text-[12px] sm:text-sm text-gray-500 mb-4">T&eacute;l&eacute;chargez son CV soft-skills pour le partager avec votre &eacute;quipe</p>
+                        <button id="btn-export-pdf"
+                            class="inline-flex items-center gap-2.5 bg-gradient-to-r from-brand-600 to-indigo-600 text-white py-3.5 px-8 rounded-xl font-bold text-sm hover:from-brand-700 hover:to-indigo-700 transition-all shadow-lg shadow-brand-500/20 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]" style="min-height:48px;">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17v3a2 2 0 002 2h14a2 2 0 002-2v-3"/></svg>
+                            T&eacute;l&eacute;charger le CV soft-skills
+                        </button>
+                    </div>
                 </div>
             </div>
         </main>
@@ -436,6 +440,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics-compat.js"></script>
     <script src="firebase-config.js?v=2"></script>
-    <script src="recruteur.js?v=8"></script>
+    <script src="recruteur.js?v=9"></script>
 </body>
 </html>
