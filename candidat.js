@@ -23,11 +23,11 @@ const STAR_PATH = "M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25
 
 const LABELS_QUALITATIFS = [
     "",
-    "En émergence",
-    "En développement",
-    "Observé",
-    "Bien observé",
-    "Point fort"
+    "Pas mon truc",
+    "Un petit peu",
+    "Ça me correspond",
+    "Plutôt à l'aise",
+    "Tout à fait moi"
 ];
 
 const QLABEL_CLASSES = [
@@ -150,7 +150,7 @@ function updateProgress() {
     const bar   = document.getElementById("progress-bar");
     const label = document.getElementById("progress-label");
     if (bar)   bar.style.width = pct + "%";
-    if (label) label.textContent = `${observed} / ${total} evalués`;
+    if (label) label.textContent = `${observed} / ${total} renseignés`;
 }
 
 // ============================================================
