@@ -92,6 +92,19 @@ function setupMobileSidebar() {
     window._closeMobileSidebar = closeSidebar;
 }
 
+function updateHeaderName(candidat) {
+    let el = document.getElementById("header-candidat-name");
+    if (!el) {
+        const headerDiv = document.querySelector("header .px-4");
+        if (!headerDiv) return;
+        el = document.createElement("span");
+        el.id = "header-candidat-name";
+        el.className = "hidden sm:inline-flex items-center gap-1.5 bg-white/15 px-3 py-1.5 rounded-lg text-xs font-semibold ml-3";
+        headerDiv.querySelector("div").appendChild(el);
+    }
+    el.textContent = `${candidat.prenom || ""} ${candidat.nom || ""}`.trim();
+}
+
 function showFab(show) {
     const fab = document.getElementById("fab-candidats");
     if (fab) fab.classList.toggle("hidden", !show);
@@ -201,6 +214,14 @@ async function selectCandidat(id, liEl) {
     if (!candidat) return;
     selectedCandidat = candidat;
 
+    updateHeaderName(candidat);
+
+    const container = document.getElementById("bilan-container");
+    const emptyState = document.getElementById("empty-state");
+    container.classList.add("hidden");
+    emptyState.classList.remove("hidden");
+    emptyState.innerHTML = '<div class="flex flex-col items-center justify-center min-h-[40vh]"><div class="w-10 h-10 border-4 border-brand-200 border-t-brand-600 rounded-full animate-spin mb-4"></div><p class="text-sm text-gray-400">Chargement du bilan...</p></div>';
+
     const standObservations = {};
     try {
         const snap = await db.collection("candidats").doc(id)
@@ -215,6 +236,9 @@ async function selectCandidat(id, liEl) {
     currentStandObservations = standObservations;
     currentScoresCandidat = candidat.scores_candidat || null;
     currentAverageScores = computeAverageScores(standObservations);
+
+    const emptyEl = document.getElementById("empty-state");
+    emptyEl.innerHTML = '';
 
     renderBilan(candidat, standObservations);
     showFab(true);
@@ -232,7 +256,7 @@ function computeAverageScores(standObs) {
     SAVOIR_ETRE.forEach(skill => { sums[skill] = 0; counts[skill] = 0; });
 
     Object.values(standObs).forEach(obs => {
-        const scores = obs.scores || {};
+        const scores = obs.scores_animateur || obs.scores || {};
         SAVOIR_ETRE.forEach(skill => {
             const v = scores[skill];
             if (v && v > 0) {
@@ -467,7 +491,8 @@ function getScorePillHTML(score) {
 function getStandDotsHTML(skill, standObservations) {
     return STANDS.map(stand => {
         const obs = standObservations[stand.id];
-        const score = obs && obs.scores ? (obs.scores[skill] || 0) : 0;
+        const scores = obs ? (obs.scores_animateur || obs.scores || {}) : {};
+        const score = scores[skill] || 0;
         if (score === 0) {
             return `<span class="stand-dot bg-gray-100 text-gray-400 border border-gray-200" title="${stand.nom} : pas encore évalué">—</span>`;
         }
@@ -610,8 +635,8 @@ function renderRadar(avgScores, scoresCandidat) {
             scales: {
                 r: {
                     beginAtZero: true, min: 0, max: 5,
-                    ticks: { stepSize: 1, font: { size: 9 }, backdropColor: "transparent", color: "#9ca3af" },
-                    pointLabels: { font: { size: 9, weight: "500" }, color: "#6b7280" },
+                    ticks: { stepSize: 1, font: { size: 11 }, backdropColor: "transparent", color: "#9ca3af" },
+                    pointLabels: { font: { size: 12, weight: "500" }, color: "#6b7280" },
                     grid: { color: "rgba(0,0,0,0.06)" },
                     angleLines: { color: "rgba(0,0,0,0.06)" }
                 }
@@ -805,7 +830,8 @@ function generatePDF(candidat, standObservations, scoresCandidat, avgScores) {
             // Stand scores
             STANDS.forEach((stand, si) => {
                 const obs = standObservations[stand.id];
-                const sv = obs && obs.scores ? (obs.scores[skill] || 0) : 0;
+                const scs = obs ? (obs.scores_animateur || obs.scores || {}) : {};
+                const sv = scs[skill] || 0;
                 pdf.setTextColor(sv > 0 ? [55, 65, 81] : [156, 163, 175]);
                 pdf.text(sv > 0 ? `${sv}/5` : "-", colX[2 + si] + 1.5, y + 3.8);
             });

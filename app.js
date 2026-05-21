@@ -243,9 +243,10 @@ async function loadExistingObservation() {
 
         if (!snap.empty) {
             const obs = snap.docs[0].data();
-            if (obs.scores) {
+            const obsScores = obs.scores_animateur || obs.scores;
+            if (obsScores) {
                 SAVOIR_ETRE.forEach(skill => {
-                    scores[skill.nom] = obs.scores[skill.nom] || 0;
+                    scores[skill.nom] = obsScores[skill.nom] || 0;
                     updateStars(skill.nom, scores[skill.nom]);
                     updateQualitativeLabel(skill.nom);
                 });

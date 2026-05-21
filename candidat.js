@@ -108,6 +108,7 @@ function setRating(skillName, value) {
     updateStars(skillName, scores[skillName]);
     updateQualitativeLabel(skillName);
     updateProgress();
+    if (navigator.vibrate) navigator.vibrate(10);
 }
 
 function previewRating(skillName, value) {
@@ -194,29 +195,37 @@ function validateForm() {
     });
 
     let valid = true;
+    let firstErrorEl = null;
 
     if (!prenom) {
         document.getElementById("prenom").classList.add("inp-error");
+        if (!firstErrorEl) firstErrorEl = document.getElementById("prenom");
         valid = false;
     }
     if (!nom) {
         document.getElementById("nom").classList.add("inp-error");
+        if (!firstErrorEl) firstErrorEl = document.getElementById("nom");
         valid = false;
     }
     if (!email) {
         document.getElementById("email").classList.add("inp-error");
+        if (!firstErrorEl) firstErrorEl = document.getElementById("email");
         valid = false;
     } else {
         // Basic email validation
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
             document.getElementById("email").classList.add("inp-error");
+            if (!firstErrorEl) firstErrorEl = document.getElementById("email");
             valid = false;
         }
     }
 
     if (!valid) {
         showToast("Veuillez remplir tous les champs obligatoires", "error");
+        if (firstErrorEl) {
+            firstErrorEl.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
     }
 
     return valid;
@@ -336,6 +345,9 @@ async function saveCandidat() {
             updateQualitativeLabel(skill.nom);
         });
         updateProgress();
+
+        // Scroll to top so the form is visibly ready for the next person
+        window.scrollTo({ top: 0, behavior: 'smooth' });
 
     } catch (err) {
         console.error("Erreur lors de l'enregistrement :", err);

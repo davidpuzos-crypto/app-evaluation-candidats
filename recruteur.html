@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Espace Recruteur — SoftSkill Observer</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -50,12 +50,12 @@
         .comp-table th { position: sticky; top: 0; z-index: 2; }
 
         /* Score pill */
-        .score-pill { display:inline-flex; align-items:center; gap:4px; padding:3px 8px; border-radius:9999px; font-size:11px; font-weight:600; white-space:nowrap; }
+        .score-pill { display:inline-flex; align-items:center; gap:4px; padding:4px 10px; border-radius:9999px; font-size:12px; font-weight:600; white-space:nowrap; }
 
         /* Stand micro-pastille */
         .stand-dot {
             display:inline-flex; align-items:center; justify-content:center;
-            width:26px; height:26px; border-radius:6px; font-size:10px; font-weight:700;
+            width:30px; height:30px; border-radius:6px; font-size:11px; font-weight:700;
             transition: transform 0.15s;
         }
         .stand-dot:hover { transform:scale(1.15); }
@@ -63,11 +63,11 @@
         /* Boussole badges */
         .boussole-badge {
             display:inline-flex; align-items:center; gap:4px;
-            padding:4px 8px; border-radius:9999px;
-            font-size:10px; font-weight:600; white-space:nowrap;
+            padding:5px 10px; border-radius:9999px;
+            font-size:11px; font-weight:600; white-space:nowrap;
         }
         @media (min-width: 768px) {
-            .boussole-badge { font-size:11px; padding:4px 10px; }
+            .boussole-badge { font-size:12px; padding:5px 12px; }
         }
         .boussole-ancree   { background:#ecfdf5; color:#065f46; border:1px solid #a7f3d0; }
         .boussole-pepite    { background:#eff6ff; color:#1e40af; border:1px solid #bfdbfe; }
@@ -146,8 +146,8 @@
             <div class="sidebar-panel absolute inset-y-0 left-0 w-[300px] max-w-[85vw] flex flex-col bg-white shadow-2xl">
                 <div class="px-4 pt-4 pb-3 border-b border-gray-100 flex items-center justify-between">
                     <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Candidats</p>
-                    <button id="btn-sidebar-close" class="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center" aria-label="Fermer">
-                        <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                    <button id="btn-sidebar-close" class="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center" aria-label="Fermer">
+                        <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
                 </div>
                 <div class="px-4 py-3">
@@ -244,7 +244,7 @@
                         </div>
                         Profil savoir-etre
                     </h3>
-                    <div class="rounded-xl bg-gray-50 border border-gray-100 p-2 sm:p-3 max-w-lg mx-auto">
+                    <div class="rounded-xl bg-gray-50 border border-gray-100 p-2 sm:p-4 max-w-xl mx-auto">
                         <canvas id="radar-chart"></canvas>
                     </div>
                     <p id="no-observation-msg" class="hidden text-center text-gray-300 text-xs py-6">Aucune observation enregistree.</p>
@@ -340,6 +340,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics-compat.js"></script>
     <script src="firebase-config.js?v=2"></script>
-    <script src="recruteur.js?v=5"></script>
+    <script src="recruteur.js?v=6"></script>
 </body>
 </html>

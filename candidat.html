@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>SoftSkill Observer — Espace candidat</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -69,6 +69,9 @@
             transition:transform 0.1s ease; -webkit-tap-highlight-color:transparent;
             touch-action:manipulation;
         }
+        @media (max-width: 640px) {
+            .star-svg { width:44px; height:44px; }
+        }
         .star-svg:hover { transform:scale(1.18); }
         .star-svg:active { transform:scale(0.9); }
         .star-svg .star-path { fill:#4a3a6e; transition:fill 0.12s ease; }
@@ -77,7 +80,7 @@
 
         /* ── Inputs ── */
         .inp {
-            width:100%; padding:11px 13px; border-radius:10px;
+            width:100%; padding:13px 16px; border-radius:10px; min-height:48px;
             background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.15);
             color:#fff; font-size:14px; outline:none;
             transition:border-color 0.15s, box-shadow 0.15s, background 0.15s;
@@ -116,8 +119,12 @@
         .custom-scroll::-webkit-scrollbar-thumb { background:rgba(139,92,246,0.3); border-radius:9px; }
 
         /* ── Toast ── */
-        @keyframes slideIn  { from{transform:translateX(120%);opacity:0;} to{transform:translateX(0);opacity:1;} }
-        @keyframes slideOut { from{transform:translateX(0);opacity:1;} to{transform:translateX(120%);opacity:0;} }
+        @keyframes slideIn  { from{transform:translateY(120%);opacity:0;} to{transform:translateY(0);opacity:1;} }
+        @keyframes slideOut { from{transform:translateY(0);opacity:1;} to{transform:translateY(120%);opacity:0;} }
+        @media (min-width: 640px) {
+            @keyframes slideIn  { from{transform:translateX(120%);opacity:0;} to{transform:translateX(0);opacity:1;} }
+            @keyframes slideOut { from{transform:translateX(0);opacity:1;} to{transform:translateX(120%);opacity:0;} }
+        }
         .toast { animation:slideIn 0.35s cubic-bezier(0.34,1.56,0.64,1) forwards; }
         .toast.hide { animation:slideOut 0.3s ease forwards; }
 
@@ -146,6 +153,21 @@
 
         /* ── inp invalid state ── */
         .inp.inp-error { border-color: #f87171; box-shadow: 0 0 0 3px rgba(248,113,113,0.15); }
+
+        /* ── Mobile sticky save safe area ── */
+        .save-wrapper {
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        .save-wrapper::before {
+            content: '';
+            position: absolute;
+            inset: -20px 0 0 0;
+            background: linear-gradient(to top, rgba(26,16,53,0.95) 60%, transparent);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: -1;
+            pointer-events: none;
+        }
     </style>
 </head>
 <body class="bg-animated min-h-screen overflow-x-hidden">
@@ -158,7 +180,7 @@
     </div>
 
     <!-- Toast container -->
-    <div id="toast-container" class="fixed top-5 right-5 z-[100] flex flex-col gap-2 pointer-events-none"></div>
+    <div id="toast-container" class="fixed bottom-20 left-1/2 -translate-x-1/2 sm:top-5 sm:right-5 sm:left-auto sm:translate-x-0 sm:bottom-auto z-[100] flex flex-col gap-2 pointer-events-none"></div>
 
     <!-- ═══════════ HEADER ═══════════ -->
     <header class="glass glass-border sticky top-0 z-50 shadow-xl shadow-black/20">
@@ -218,20 +240,20 @@
                     <div class="grid grid-cols-2 gap-2.5">
                         <div>
                             <label class="block text-[11px] font-semibold text-white/55 mb-1.5 uppercase tracking-wider">Prenom <span class="text-red-400">*</span></label>
-                            <input type="text" id="prenom" name="prenom" required class="inp" placeholder="Marie">
+                            <input type="text" id="prenom" name="prenom" required class="inp" placeholder="Marie" autocomplete="given-name" inputmode="text" enterkeyhint="next">
                         </div>
                         <div>
                             <label class="block text-[11px] font-semibold text-white/55 mb-1.5 uppercase tracking-wider">Nom <span class="text-red-400">*</span></label>
-                            <input type="text" id="nom" name="nom" required class="inp" placeholder="Dupont">
+                            <input type="text" id="nom" name="nom" required class="inp" placeholder="Dupont" autocomplete="family-name" inputmode="text" enterkeyhint="next">
                         </div>
                     </div>
                     <div>
                         <label class="block text-[11px] font-semibold text-white/55 mb-1.5 uppercase tracking-wider">Email <span class="text-red-400">*</span></label>
-                        <input type="email" id="email" name="email" required class="inp" placeholder="marie@email.com">
+                        <input type="email" id="email" name="email" required class="inp" placeholder="marie@email.com" autocomplete="email" inputmode="email" enterkeyhint="next">
                     </div>
                     <div>
                         <label class="block text-[11px] font-semibold text-white/55 mb-1.5 uppercase tracking-wider">LinkedIn <span class="normal-case font-normal text-white/25">— optionnel</span></label>
-                        <input type="url" id="linkedin" name="linkedin" class="inp" placeholder="https://linkedin.com/in/...">
+                        <input type="url" id="linkedin" name="linkedin" class="inp" placeholder="https://linkedin.com/in/..." inputmode="url" enterkeyhint="done">
                     </div>
                 </form>
             </div>
@@ -320,7 +342,7 @@
             </div>
 
             <!-- Grille des competences -->
-            <div class="flex-1 overflow-y-auto custom-scroll rounded-2xl glass-card mb-4" style="max-height: 560px;">
+            <div class="flex-1 custom-scroll rounded-2xl glass-card mb-4 lg:max-h-[560px] lg:overflow-y-auto">
                 <div id="skills-grid" class="divide-y divide-white/8">
                     <!-- Genere par candidat.js -->
                 </div>
@@ -335,7 +357,7 @@
                     <h2 class="text-sm font-bold text-white/90">Protection des données (RGPD)</h2>
                 </div>
                 <label class="flex items-start gap-3 cursor-pointer group" for="rgpd-consent">
-                    <input type="checkbox" id="rgpd-consent" class="mt-1 w-5 h-5 rounded border-2 border-white/25 bg-white/5 text-brand-500 focus:ring-brand-500 focus:ring-offset-0 focus:ring-2 cursor-pointer flex-shrink-0" style="accent-color:#8b5cf6; min-width:20px; min-height:20px;">
+                    <input type="checkbox" id="rgpd-consent" class="mt-1 w-6 h-6 rounded border-2 border-white/25 bg-white/5 text-brand-500 focus:ring-brand-500 focus:ring-offset-0 focus:ring-2 cursor-pointer flex-shrink-0" style="accent-color:#8b5cf6; min-width:24px; min-height:24px;">
                     <span class="text-[12px] text-white/60 leading-relaxed group-hover:text-white/70 transition-colors">
                         En cochant cette case, j'accepte que mes données personnelles (nom, prénom, email, profil 16 Personalities) et les évaluations de mes savoir-être soient collectées et traitées <strong class="text-white/80">exclusivement dans le cadre de ce forum emploi ludique</strong> pour m'accompagner dans mon orientation. Si j'ai moins de 15 ans (minorité numérique au sens du RGPD), je confirme avoir obtenu l'accord de mon parent ou tuteur légal. <span class="text-red-400">*</span>
                     </span>
@@ -344,7 +366,7 @@
             </div>
 
             <!-- Bouton enregistrer -->
-            <div class="sticky bottom-0 z-10">
+            <div class="sticky bottom-0 z-10 save-wrapper relative pt-5">
                 <button id="btn-enregistrer" class="btn-save w-full text-white py-4 px-6 rounded-xl font-bold flex items-center justify-center gap-2 text-[15px]" style="min-height:54px;">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
                     Enregistrer mon profil
@@ -373,6 +395,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics-compat.js"></script>
     <script src="firebase-config.js?v=2"></script>
-    <script src="candidat.js?v=4"></script>
+    <script src="candidat.js?v=5"></script>
 </body>
 </html>
