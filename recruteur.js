@@ -478,7 +478,7 @@ function renderSuperPouvoirs(avgScores) {
 // ============================================================
 function getScorePillHTML(score) {
     if (!score || score === 0) {
-        return '<span class="score-pill bg-gray-100 text-gray-400 border border-gray-200">—</span>';
+        return '';
     }
     const rounded = Math.round(score);
     const label = LABELS_QUALITATIFS[rounded] || "—";
@@ -494,7 +494,7 @@ function getStandDotsHTML(skill, standObservations) {
         const scores = obs ? (obs.scores_animateur || obs.scores || {}) : {};
         const score = scores[skill] || 0;
         if (score === 0) {
-            return `<span class="stand-dot bg-gray-100 text-gray-400 border border-gray-200" title="${stand.nom} : pas encore évalué">—</span>`;
+            return '';
         }
         const colors = SCORE_COLORS[score];
         return `<span class="stand-dot" style="background:${colors.bg};color:${colors.text};border:1px solid ${colors.border}" title="${stand.nom} : ${score}/5 — ${LABELS_QUALITATIFS[score]}">${score}</span>`;
@@ -503,7 +503,7 @@ function getStandDotsHTML(skill, standObservations) {
 
 function getBoussoleHTML(scoreCandidat, avgTerrain) {
     if ((!scoreCandidat || scoreCandidat === 0) || avgTerrain === 0) {
-        return '<span class="boussole-badge bg-gray-100 text-gray-400 border border-gray-200">—</span>';
+        return '';
     }
 
     const ecart = scoreCandidat - avgTerrain;
@@ -608,7 +608,13 @@ function renderRadar(avgScores, scoresCandidat) {
     radarChart = new Chart(canvas, {
         type: "radar",
         data: {
-            labels: SAVOIR_ETRE.map(l => l.length > 14 ? l.slice(0, 12) + "…" : l),
+            labels: SAVOIR_ETRE.map(l => {
+                if (l.length <= 14) return l;
+                const mid = Math.ceil(l.length / 2);
+                const spaceIdx = l.lastIndexOf(' ', mid);
+                if (spaceIdx > 0) return [l.slice(0, spaceIdx), l.slice(spaceIdx + 1)];
+                return l;
+            }),
             datasets
         },
         options: {
@@ -678,14 +684,23 @@ function cleanText(s) {
 }
 
 function setupExportPDF() {
-    document.getElementById("btn-export-pdf").addEventListener("click", () => {
+    const btn = document.getElementById("btn-export-pdf");
+    btn.addEventListener("click", () => {
         if (!selectedCandidat) return;
-        try {
-            generatePDF(selectedCandidat, currentStandObservations, currentScoresCandidat, currentAverageScores);
-        } catch (err) {
-            console.error("Erreur export PDF :", err);
-            alert("Erreur PDF : " + err.message);
-        }
+        const origHTML = btn.innerHTML;
+        btn.innerHTML = '<svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> Génération...';
+        btn.disabled = true;
+        setTimeout(() => {
+            try {
+                generatePDF(selectedCandidat, currentStandObservations, currentScoresCandidat, currentAverageScores);
+            } catch (err) {
+                console.error("Erreur export PDF :", err);
+                alert("Erreur lors de l'export PDF : " + err.message);
+            } finally {
+                btn.innerHTML = origHTML;
+                btn.disabled = false;
+            }
+        }, 50);
     });
 }
 
@@ -793,7 +808,7 @@ function generatePDF(candidat, standObservations, scoresCandidat, avgScores) {
         y += 7;
 
         const colX = [M, M + 48, M + 68, M + 88, M + 108, M + 128];
-        const colLabels = ["Savoir-etre", "Auto", "Aero", "Bat", "AV", "Resto", "Boussole"];
+        const colLabels = ["Savoir-etre", "Auto-eval", "Aero", "Bat", "AV", "Resto", "Boussole"];
         const rowH = 5.5;
 
         pdf.setFillColor(243, 244, 246);
@@ -824,16 +839,20 @@ function generatePDF(candidat, standObservations, scoresCandidat, avgScores) {
             pdf.text(cleanText(skill), colX[0] + 1.5, y + 3.8);
 
             // Auto score
-            pdf.setTextColor(sc > 0 ? [55, 65, 81] : [156, 163, 175]);
-            pdf.text(sc > 0 ? `${sc}/5` : "-", colX[1] + 1.5, y + 3.8);
+            if (sc > 0) {
+                pdf.setTextColor(55, 65, 81);
+                pdf.text(`${sc}/5`, colX[1] + 1.5, y + 3.8);
+            }
 
             // Stand scores
             STANDS.forEach((stand, si) => {
                 const obs = standObservations[stand.id];
                 const scs = obs ? (obs.scores_animateur || obs.scores || {}) : {};
                 const sv = scs[skill] || 0;
-                pdf.setTextColor(sv > 0 ? [55, 65, 81] : [156, 163, 175]);
-                pdf.text(sv > 0 ? `${sv}/5` : "-", colX[2 + si] + 1.5, y + 3.8);
+                if (sv > 0) {
+                    pdf.setTextColor(55, 65, 81);
+                    pdf.text(`${sv}/5`, colX[2 + si] + 1.5, y + 3.8);
+                }
             });
 
             // Boussole text
@@ -850,9 +869,6 @@ function generatePDF(candidat, standObservations, scoresCandidat, avgScores) {
                     pdf.setTextColor(133, 77, 14);
                     pdf.text("Potentiel a confirmer", M + 148, y + 3.8);
                 }
-            } else {
-                pdf.setTextColor(156, 163, 175);
-                pdf.text("-", M + 150, y + 3.8);
             }
 
             y += rowH;
@@ -879,8 +895,12 @@ function generatePDF(candidat, standObservations, scoresCandidat, avgScores) {
 
     const hasRadarData = avgScores && Object.values(avgScores).some(v => v > 0);
     if (hasRadarData && radarChart) {
-        const img = radarChart.toBase64Image("image/png", 1.0);
-        pdf.addImage(img, "PNG", radarX + 5, y + 8, radarW - 10, radarH - 14);
+        try {
+            const img = radarChart.toBase64Image("image/png", 1.0);
+            pdf.addImage(img, "PNG", radarX + 5, y + 8, radarW - 10, radarH - 14);
+        } catch (e) {
+            console.warn("Radar image export failed:", e);
+        }
     } else {
         pdf.setFont("helvetica", "italic");
         pdf.setFontSize(8);
@@ -919,7 +939,7 @@ function generatePDF(candidat, standObservations, scoresCandidat, avgScores) {
     pdf.setFontSize(7);
     pdf.setTextColor(156, 163, 175);
     const dateStr = new Date().toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" });
-    pdf.text(`SoftSkill Observer - CV soft-skills - Genere le ${dateStr}`, PW / 2, PH - 5, { align: "center" });
+    pdf.text(cleanText(`SoftSkill Observer - CV soft-skills - Genere le ${dateStr}`), PW / 2, PH - 5, { align: "center" });
 
-    pdf.save(`AntiCV_${cleanText(candidat.prenom || "")}_${cleanText(candidat.nom || "")}.pdf`);
+    pdf.save(`CV_SoftSkills_${cleanText(candidat.prenom || "")}_${cleanText(candidat.nom || "")}.pdf`);
 }
