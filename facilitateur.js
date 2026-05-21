@@ -104,6 +104,7 @@ function initSkillsGrid() {
 }
 
 function setRating(skillName, value) {
+    if (navigator.vibrate) navigator.vibrate(10);
     scores[skillName] = scores[skillName] === value ? 0 : value;
     updateStars(skillName, scores[skillName]);
     updateQualitativeLabel(skillName);
@@ -184,9 +185,10 @@ function showToast(message, type = "success") {
 
 async function loadCandidats() {
     const select = document.getElementById("select-candidat");
-    select.innerHTML = '<option value="">— Choisir un candidat —</option>';
+    select.innerHTML = '<option value="">Chargement...</option>';
     try {
         const snap = await db.collection("candidats").orderBy("dateInscription", "desc").get();
+        select.innerHTML = '<option value="">— Choisir un candidat —</option>';
         snap.forEach(doc => {
             const c   = doc.data();
             const opt = document.createElement("option");
@@ -203,11 +205,18 @@ async function loadCandidats() {
 function setupSelectionChange() {
     document.getElementById("select-candidat").addEventListener("change", onSelectionChange);
     document.getElementById("select-stand").addEventListener("change", onSelectionChange);
+
+    const savedStand = localStorage.getItem('softskill_stand');
+    if (savedStand) {
+        document.getElementById("select-stand").value = savedStand;
+    }
 }
 
 async function onSelectionChange() {
     const candidatId = document.getElementById("select-candidat").value;
     const standId    = document.getElementById("select-stand").value;
+
+    if (standId) localStorage.setItem('softskill_stand', standId);
 
     if (candidatId) {
         await loadStandBadges(candidatId);
@@ -217,9 +226,26 @@ async function onSelectionChange() {
 
     if (!candidatId || !standId) {
         resetScores();
+        updateContextBar();
         return;
     }
     await loadExistingObservation(candidatId, standId);
+    updateContextBar();
+}
+
+function updateContextBar() {
+    const standId = document.getElementById("select-stand").value;
+    const candidatId = document.getElementById("select-candidat").value;
+    const bar = document.getElementById("context-bar");
+    if (!standId && !candidatId) { bar.classList.add("hidden"); return; }
+    bar.classList.remove("hidden");
+    const stand = STANDS.find(s => s.id === standId);
+    document.getElementById("ctx-stand").textContent = stand ? `${stand.emoji} ${stand.nom}` : "Stand non choisi";
+    const select = document.getElementById("select-candidat");
+    const candidatName = candidatId ? select.options[select.selectedIndex].text : "Candidat non choisi";
+    document.getElementById("ctx-candidat").textContent = candidatName;
+    document.getElementById("ctx-status").textContent = "Non enregistré";
+    document.getElementById("ctx-status").className = "text-[11px] font-semibold px-2.5 py-1 rounded-full bg-amber-400/20 text-amber-300";
 }
 
 async function loadStandBadges(candidatId) {
@@ -280,6 +306,8 @@ async function loadExistingObservation(candidatId, standId) {
 function setupObservationHandlers() {
     document.getElementById("btn-save-observation").addEventListener("click", saveObservation);
     document.getElementById("btn-reset-scores").addEventListener("click", () => {
+        if (!Object.values(scores).some(v => v > 0)) return;
+        if (!confirm("Réinitialiser toutes les observations ?")) return;
         resetScores();
         showToast("Observations réinitialisées", "info");
     });
@@ -327,6 +355,11 @@ async function saveObservation() {
         });
 
         showToast(`Observation enregistrée — ${stand.emoji} ${stand.nom}`);
+        const ctxStatus = document.getElementById("ctx-status");
+        if (ctxStatus) {
+            ctxStatus.textContent = "Enregistré ✓";
+            ctxStatus.className = "text-[11px] font-semibold px-2.5 py-1 rounded-full bg-emerald-400/20 text-emerald-300";
+        }
         await loadStandBadges(candidatId);
     } catch (err) {
         console.error("Erreur sauvegarde :", err);
