@@ -74,9 +74,9 @@ function initSkillsGrid() {
                     <span class="text-[11px] text-white/35 block mt-0.5 leading-snug">${skill.desc}</span>
                 </div>
             </div>
-            <div class="flex items-center justify-between pl-12 sm:pl-0 sm:ml-3 sm:flex-col sm:items-end sm:gap-1 sm:flex-shrink-0">
-                <span class="text-[12px] text-white/45 font-medium qualitative-label order-2 sm:order-2" data-qlabel="${skill.nom}">Pas encore renseigné</span>
-                <div class="flex items-center gap-1 order-1 sm:order-1" data-stars="${skill.nom}"></div>
+            <div class="flex flex-col items-center gap-1.5 pl-12 sm:pl-0 sm:ml-3 sm:items-end sm:flex-shrink-0">
+                <div class="flex items-center gap-1" data-stars="${skill.nom}"></div>
+                <span class="text-[12px] text-white/45 font-medium qualitative-label text-center sm:text-right" data-qlabel="${skill.nom}">Pas encore renseigné</span>
             </div>
         `;
 
