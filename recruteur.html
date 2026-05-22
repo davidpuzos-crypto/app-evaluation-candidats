@@ -22,12 +22,6 @@
         .sidebar-item:hover { background-color:#f5f3ff; border-left-color:#c4b5fd; }
         .sidebar-item.active { background-color:#ede9fe; border-left-color:#7c3aed; }
 
-        /* Mobile sidebar overlay */
-        .sidebar-backdrop { transition: opacity 0.25s ease; }
-        .sidebar-panel { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .sidebar-closed .sidebar-backdrop { opacity:0; pointer-events:none; }
-        .sidebar-closed .sidebar-panel { transform: translateX(-100%); }
-
         /* Progress */
         .progress-fill { transition:width 0.8s cubic-bezier(0.34,1.2,0.64,1); }
 
@@ -99,18 +93,9 @@
             border: 1px solid #fde68a;
         }
 
-        /* Mobile FAB */
-        .fab-candidats {
-            position: fixed; bottom: 24px; right: 24px; z-index: 30;
-            width: 56px; height: 56px; border-radius: 50%;
-            background: linear-gradient(135deg, #7c3aed, #6d28d9);
-            color: white; display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 6px 24px rgba(124,58,237,0.4);
-            transition: transform 0.2s, box-shadow 0.2s;
-            touch-action: manipulation;
-        }
-        .fab-candidats:hover { transform: scale(1.08); box-shadow: 0 8px 32px rgba(124,58,237,0.5); }
-        .fab-candidats:active { transform: scale(0.95); }
+        /* Welcome list active state */
+        .welcome-list-item { -webkit-tap-highlight-color: transparent; }
+        .welcome-list-item:active { transform: scale(0.99); }
 
         /* Welcome gradient text */
         .welcome-gradient {
@@ -152,21 +137,20 @@
     <!-- HEADER -->
     <header class="bg-gradient-to-r from-brand-700 via-brand-600 to-indigo-600 text-white flex-shrink-0 shadow-lg z-50">
         <div class="px-4 sm:px-6 py-3 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <!-- Mobile sidebar toggle -->
-                <button id="btn-sidebar-toggle" class="lg:hidden w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center flex-shrink-0" aria-label="Candidats">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+            <div class="flex items-center gap-3 min-w-0">
+                <!-- Back to list (mobile only, when bilan visible) -->
+                <button id="btn-back-to-list" class="hidden lg:hidden w-10 h-10 rounded-xl bg-white/15 hover:bg-white/25 flex items-center justify-center flex-shrink-0 transition-colors" aria-label="Retour à la liste">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
                 </button>
-                <!-- Desktop icon -->
-                <div class="hidden lg:flex w-10 h-10 rounded-xl bg-white/15 items-center justify-center flex-shrink-0">
+                <div class="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center flex-shrink-0">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                 </div>
-                <div>
-                    <h1 class="text-sm sm:text-base font-bold leading-tight tracking-tight flex items-center gap-2">SoftSkill <span class="text-brand-200">Observer</span> <span id="header-count" class="hidden bg-white/20 text-white/90 text-[10px] font-bold px-2 py-0.5 rounded-full">0</span></h1>
+                <div class="min-w-0">
+                    <h1 class="text-sm sm:text-base font-bold leading-tight tracking-tight flex items-center gap-2 truncate">SoftSkill <span class="text-brand-200">Observer</span> <span id="header-count" class="hidden bg-white/20 text-white/90 text-[10px] font-bold px-2 py-0.5 rounded-full">0</span></h1>
                     <p class="text-[10px] text-white/70 font-medium hidden sm:block">Espace recruteur &middot; CV soft-skills</p>
                 </div>
             </div>
-            <a href="index.html" class="no-print flex items-center gap-1.5 bg-white/10 hover:bg-white/20 border border-white/20 px-3 py-2 rounded-xl text-xs font-semibold transition-all" style="min-height:44px;">
+            <a href="index.html" class="no-print flex items-center gap-1.5 bg-white/10 hover:bg-white/20 border border-white/20 px-3 py-2 rounded-xl text-xs font-semibold transition-all flex-shrink-0" style="min-height:44px;">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 17l-5-5m0 0l5-5m-5 5h12"/></svg>
                 <span class="hidden sm:inline">Accueil</span>
             </a>
@@ -175,29 +159,6 @@
 
     <!-- LAYOUT -->
     <div class="flex flex-1 lg:overflow-hidden relative">
-
-        <!-- MOBILE SIDEBAR OVERLAY -->
-        <div id="sidebar-overlay" class="sidebar-closed lg:hidden fixed inset-0 z-40">
-            <div class="sidebar-backdrop absolute inset-0 bg-black/50" id="sidebar-backdrop"></div>
-            <div class="sidebar-panel absolute inset-y-0 left-0 w-[300px] max-w-[85vw] flex flex-col bg-white shadow-2xl">
-                <div class="px-4 pt-4 pb-3 border-b border-gray-100 flex items-center justify-between">
-                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Candidats</p>
-                    <button id="btn-sidebar-close" class="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center" aria-label="Fermer">
-                        <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-                    </button>
-                </div>
-                <div class="px-4 py-3">
-                    <div class="relative">
-                        <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                        <input type="text" id="search-input-mobile" placeholder="Rechercher..." class="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand-300 focus:border-brand-400 outline-none bg-gray-50 text-gray-700 placeholder-gray-400">
-                    </div>
-                </div>
-                <ul id="candidat-list-mobile" class="flex-1 overflow-y-auto custom-scroll py-1"></ul>
-                <div class="px-4 py-2.5 border-t border-gray-100 text-center">
-                    <span id="candidat-count-mobile" class="text-[11px] text-gray-400 font-medium">0 candidat(s)</span>
-                </div>
-            </div>
-        </div>
 
         <!-- DESKTOP SIDEBAR -->
         <aside class="no-print hidden lg:flex w-[280px] flex-shrink-0 flex-col bg-white border-r border-gray-200">
@@ -253,7 +214,7 @@
                     </div>
 
                     <!-- Live stats -->
-                    <div class="flex items-center justify-center gap-6 sm:gap-10 mb-8 sm:mb-10">
+                    <div class="flex items-center justify-center gap-6 sm:gap-10 mb-6 sm:mb-8">
                         <div class="text-center">
                             <span id="stat-candidats" class="block text-2xl sm:text-3xl font-extrabold text-brand-600">&mdash;</span>
                             <span class="text-[11px] sm:text-xs text-gray-400 font-medium">candidats &eacute;valu&eacute;s</span>
@@ -265,23 +226,25 @@
                         </div>
                     </div>
 
-                    <!-- Quick picks (populated by JS) -->
-                    <div id="quick-picks-wrapper" class="hidden mb-8 sm:mb-10">
-                        <p class="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3 text-center">Candidats r&eacute;cents</p>
-                        <div id="quick-picks" class="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3"></div>
-                    </div>
+                    <!-- Desktop hint -->
+                    <p class="hidden lg:block text-sm text-gray-400 text-center mb-6">S&eacute;lectionnez un candidat dans la liste &agrave; gauche pour d&eacute;couvrir son profil</p>
 
-                    <!-- CTA -->
-                    <div class="text-center mb-8 sm:mb-10">
-                        <button id="btn-select-mobile" class="lg:hidden bg-gradient-to-r from-brand-600 to-indigo-600 text-white px-8 py-4 rounded-2xl font-bold text-base flex items-center gap-3 shadow-xl shadow-brand-500/25 mx-auto transition-transform hover:scale-[1.02] active:scale-[0.98]" style="min-height:56px;">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                            Consulter un profil
-                        </button>
-                        <p class="hidden lg:block text-sm text-gray-400 mt-2">S&eacute;lectionnez un candidat dans la liste &agrave; gauche pour d&eacute;couvrir son profil</p>
+                    <!-- Full candidate list (mobile/tablet) -->
+                    <div id="welcome-list-wrapper" class="lg:hidden">
+                        <div class="flex items-center justify-between mb-3">
+                            <p class="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Tous les candidats</p>
+                            <span id="welcome-list-count" class="text-[11px] text-gray-400 font-medium"></span>
+                        </div>
+                        <div class="relative mb-3">
+                            <svg class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                            <input type="text" id="welcome-search" placeholder="Rechercher un candidat..." class="w-full pl-10 pr-4 py-3 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-300 focus:border-brand-400 outline-none bg-white text-gray-700 placeholder-gray-400 shadow-sm" style="min-height:48px;">
+                        </div>
+                        <div id="welcome-list" class="space-y-2"></div>
+                        <p id="welcome-list-empty" class="hidden text-center text-gray-400 text-sm py-8">Aucun candidat trouv&eacute;</p>
                     </div>
 
                     <!-- Disclaimer -->
-                    <div class="bg-gray-50 border border-gray-200 rounded-xl px-4 sm:px-5 py-3 text-center max-w-xl mx-auto">
+                    <div class="bg-gray-50 border border-gray-200 rounded-xl px-4 sm:px-5 py-3 text-center max-w-xl mx-auto mt-6 sm:mt-8">
                         <p class="text-[11px] text-gray-400 leading-relaxed">Cet outil compl&egrave;te votre processus de recrutement. Les savoir-&ecirc;tre sont &eacute;valu&eacute;s en situation de jeu : un &eacute;clairage suppl&eacute;mentaire, pas un verdict.</p>
                     </div>
 
@@ -373,7 +336,8 @@
                         </h3>
                         <p class="text-[11px] text-gray-400 mt-1 ml-9">Auto-evaluation vs observations terrain</p>
                     </div>
-                    <div class="overflow-x-auto -mx-px">
+                    <!-- Desktop table -->
+                    <div class="hidden md:block overflow-x-auto -mx-px">
                         <table class="comp-table w-full text-sm" style="min-width:640px;">
                             <thead>
                                 <tr class="bg-gray-50 border-b border-gray-200">
@@ -386,6 +350,8 @@
                             <tbody id="comp-table-body"></tbody>
                         </table>
                     </div>
+                    <!-- Mobile cards -->
+                    <div id="comp-cards" class="md:hidden p-3 space-y-3"></div>
                     <div id="comp-table-empty" class="hidden px-4 sm:px-7 py-10 text-center text-gray-300 text-sm">
                         Aucune donnee disponible pour la comparaison.
                     </div>
@@ -416,11 +382,6 @@
 
     </div>
 
-    <!-- Mobile FAB (visible when bilan is shown) -->
-    <button id="fab-candidats" class="fab-candidats lg:hidden no-print hidden" aria-label="Changer de candidat">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-    </button>
-
     <!-- FOOTER (desktop only) -->
     <footer class="no-print bg-white border-t border-gray-200 flex-shrink-0 block">
         <div class="max-w-screen-2xl mx-auto px-5 py-4 flex items-center justify-center gap-4 text-center">
@@ -442,6 +403,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics-compat.js"></script>
     <script src="firebase-config.js?v=2"></script>
-    <script src="recruteur.js?v=11"></script>
+    <script src="recruteur.js?v=12"></script>
 </body>
 </html>
