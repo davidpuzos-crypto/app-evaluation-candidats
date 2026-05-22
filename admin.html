@@ -195,7 +195,33 @@
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-semibold text-gray-500 mb-1">Profil MBTI</label>
-                        <input id="edit-mbti" type="text" class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none" placeholder="Ex: INTJ">
+                        <select id="edit-mbti" class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none bg-white cursor-pointer">
+                            <option value="">— Non renseigné —</option>
+                            <optgroup label="Analystes">
+                                <option value="INTJ">INTJ — L'Architecte</option>
+                                <option value="INTP">INTP — Le Logicien</option>
+                                <option value="ENTJ">ENTJ — Le Commandant</option>
+                                <option value="ENTP">ENTP — L'Innovateur</option>
+                            </optgroup>
+                            <optgroup label="Diplomates">
+                                <option value="INFJ">INFJ — L'Avocat</option>
+                                <option value="INFP">INFP — Le Médiateur</option>
+                                <option value="ENFJ">ENFJ — Le Protagoniste</option>
+                                <option value="ENFP">ENFP — L'Inspirateur</option>
+                            </optgroup>
+                            <optgroup label="Sentinelles">
+                                <option value="ISTJ">ISTJ — Le Logisticien</option>
+                                <option value="ISFJ">ISFJ — Le Défenseur</option>
+                                <option value="ESTJ">ESTJ — Le Directeur</option>
+                                <option value="ESFJ">ESFJ — Le Consul</option>
+                            </optgroup>
+                            <optgroup label="Explorateurs">
+                                <option value="ISTP">ISTP — Le Virtuose</option>
+                                <option value="ISFP">ISFP — L'Aventurier</option>
+                                <option value="ESTP">ESTP — L'Entrepreneur</option>
+                                <option value="ESFP">ESFP — L'Animateur</option>
+                            </optgroup>
+                        </select>
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-gray-500 mb-1">Lien personnalité</label>
@@ -268,6 +294,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
     <script src="firebase-config.js"></script>
-    <script src="admin.js?v=2"></script>
+    <script src="admin.js?v=3"></script>
 </body>
 </html>
