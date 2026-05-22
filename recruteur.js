@@ -66,30 +66,31 @@ document.addEventListener("DOMContentLoaded", () => {
     loadCandidats();
     setupSearch();
     setupExportPDF();
-    setupMobileSidebar();
+    setupBackToList();
 });
 
 // ============================================================
-// Mobile sidebar
+// Back-to-list (mobile)
 // ============================================================
-function setupMobileSidebar() {
-    const overlay = document.getElementById("sidebar-overlay");
-    const backdrop = document.getElementById("sidebar-backdrop");
-    const btnToggle = document.getElementById("btn-sidebar-toggle");
-    const btnClose = document.getElementById("btn-sidebar-close");
-    const btnSelectMobile = document.getElementById("btn-select-mobile");
-    const fab = document.getElementById("fab-candidats");
+function setupBackToList() {
+    const btn = document.getElementById("btn-back-to-list");
+    if (!btn) return;
+    btn.addEventListener("click", () => {
+        backToWelcome();
+    });
+}
 
-    function openSidebar() { overlay.classList.remove("sidebar-closed"); document.body.style.overflow = "hidden"; }
-    function closeSidebar() { overlay.classList.add("sidebar-closed"); document.body.style.overflow = ""; }
-
-    btnToggle.addEventListener("click", openSidebar);
-    btnClose.addEventListener("click", closeSidebar);
-    backdrop.addEventListener("click", closeSidebar);
-    if (btnSelectMobile) btnSelectMobile.addEventListener("click", openSidebar);
-    if (fab) fab.addEventListener("click", openSidebar);
-
-    window._closeMobileSidebar = closeSidebar;
+function backToWelcome() {
+    selectedCandidat = null;
+    document.getElementById("bilan-container").classList.add("hidden");
+    document.getElementById("empty-state").classList.remove("hidden");
+    document.getElementById("loading-overlay").classList.add("hidden");
+    document.getElementById("btn-back-to-list").classList.add("hidden");
+    document.querySelectorAll(".sidebar-item.active").forEach(el => el.classList.remove("active"));
+    document.querySelectorAll(".welcome-list-item.active").forEach(el => el.classList.remove("active"));
+    const headerName = document.getElementById("header-candidat-name");
+    if (headerName) headerName.remove();
+    window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 function updateHeaderName(candidat) {
@@ -105,9 +106,9 @@ function updateHeaderName(candidat) {
     el.textContent = `${candidat.prenom || ""} ${candidat.nom || ""}`.trim();
 }
 
-function showFab(show) {
-    const fab = document.getElementById("fab-candidats");
-    if (fab) fab.classList.toggle("hidden", !show);
+function showBackButton(show) {
+    const btn = document.getElementById("btn-back-to-list");
+    if (btn) btn.classList.toggle("hidden", !show);
 }
 
 // ============================================================
@@ -119,9 +120,9 @@ async function loadCandidats() {
         allCandidats = [];
         snap.forEach(doc => allCandidats.push({ id: doc.id, ...doc.data() }));
         renderCandidatList(allCandidats);
+        renderWelcomeList(allCandidats);
         updateCounts(allCandidats.length);
         updateWelcomeStats();
-        renderQuickPicks();
     } catch (err) {
         console.error("Erreur chargement candidats :", err);
         getListEls().forEach(el => {
@@ -131,15 +132,14 @@ async function loadCandidats() {
 }
 
 function getListEls() {
-    return [document.getElementById("candidat-list"), document.getElementById("candidat-list-mobile")].filter(Boolean);
+    return [document.getElementById("candidat-list")].filter(Boolean);
 }
 
 function updateCounts(count) {
-    const txt = `${count} candidat(s)`;
-    ["candidat-count", "candidat-count-mobile"].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.textContent = txt;
-    });
+    const el = document.getElementById("candidat-count");
+    if (el) el.textContent = `${count} candidat(s)`;
+    const wl = document.getElementById("welcome-list-count");
+    if (wl) wl.textContent = `${count} candidat${count > 1 ? "s" : ""}`;
 }
 
 function updateWelcomeStats() {
@@ -166,22 +166,36 @@ function updateWelcomeStats() {
     }
 }
 
-function renderQuickPicks() {
-    const container = document.getElementById("quick-picks");
-    const wrapper = document.getElementById("quick-picks-wrapper");
-    if (!container || !wrapper || !allCandidats.length) return;
+function renderWelcomeList(candidats) {
+    const container = document.getElementById("welcome-list");
+    const empty = document.getElementById("welcome-list-empty");
+    if (!container) return;
 
-    const recent = allCandidats.slice(0, 6);
-    wrapper.classList.remove("hidden");
+    if (!candidats.length) {
+        container.innerHTML = "";
+        if (empty) empty.classList.remove("hidden");
+        return;
+    }
 
-    container.innerHTML = recent.map(c => {
+    if (empty) empty.classList.add("hidden");
+
+    container.innerHTML = candidats.map(c => {
         const ini = ((c.prenom || "")[0] || "") + ((c.nom || "")[0] || "");
+        let dateStr = "";
+        const ts = c.dateDerniereObservation || c.dateInscription;
+        if (ts) {
+            const d = ts.toDate ? ts.toDate() : new Date(ts);
+            dateStr = d.toLocaleDateString("fr-FR", { day: "2-digit", month: "short" });
+        }
         return `
-            <button class="quick-pick-card bg-white rounded-xl border border-gray-200 p-3 sm:p-4 flex items-center gap-3 hover:border-brand-300 hover:shadow-md transition-all text-left w-full" data-candidat-id="${c.id}">
-                <div class="avatar w-10 h-10 text-sm">${ini.toUpperCase()}</div>
+            <button class="welcome-list-item w-full bg-white rounded-xl border border-gray-200 p-3 flex items-center gap-3 hover:border-brand-300 hover:shadow-md transition-all text-left" data-candidat-id="${c.id}" style="min-height:64px;">
+                <div class="avatar w-11 h-11 text-sm">${ini.toUpperCase()}</div>
                 <div class="min-w-0 flex-1">
                     <p class="font-semibold text-gray-700 text-sm truncate">${c.prenom || ""} ${c.nom || ""}</p>
-                    ${c.profil_psy ? `<span class="text-[10px] font-bold text-brand-600 bg-brand-50 px-1.5 py-0.5 rounded">${c.profil_psy}</span>` : '<span class="text-[10px] text-gray-400">Pas de profil MBTI</span>'}
+                    <div class="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                        ${dateStr ? `<span class="text-[10px] text-gray-400">${dateStr}</span>` : ""}
+                        ${c.profil_psy ? `<span class="text-[10px] font-bold text-brand-600 bg-brand-50 px-1.5 py-0.5 rounded">${c.profil_psy}</span>` : ""}
+                    </div>
                 </div>
                 <svg class="w-4 h-4 text-gray-300 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
             </button>
@@ -192,7 +206,7 @@ function renderQuickPicks() {
         btn.addEventListener("click", () => {
             const id = btn.getAttribute("data-candidat-id");
             const li = document.querySelector(`.sidebar-item[data-id="${id}"]`);
-            if (li) selectCandidat(id, li);
+            selectCandidat(id, li || btn);
         });
     });
 }
@@ -240,7 +254,7 @@ function renderCandidatList(candidats) {
 // Search
 // ============================================================
 function setupSearch() {
-    ["search-input", "search-input-mobile"].forEach(id => {
+    ["search-input", "welcome-search"].forEach(id => {
         const el = document.getElementById(id);
         if (!el) return;
         el.addEventListener("input", (e) => {
@@ -249,6 +263,7 @@ function setupSearch() {
                 ? allCandidats.filter(c => `${c.prenom} ${c.nom} ${c.email} ${c.profil_psy || ""}`.toLowerCase().includes(q))
                 : allCandidats;
             renderCandidatList(filtered);
+            renderWelcomeList(filtered);
             updateCounts(filtered.length);
         });
     });
@@ -258,14 +273,11 @@ function setupSearch() {
 // Select candidate — fetch ALL stand observations
 // ============================================================
 async function selectCandidat(id, liEl) {
-    document.querySelectorAll(".sidebar-item").forEach(el => el.classList.remove("active"));
-    liEl.classList.add("active");
+    document.querySelectorAll(".sidebar-item, .welcome-list-item").forEach(el => el.classList.remove("active"));
+    if (liEl) liEl.classList.add("active");
 
-    // Highlight same candidate in the other list
+    // Highlight same candidate in the desktop sidebar too
     document.querySelectorAll(`.sidebar-item[data-id="${id}"]`).forEach(el => el.classList.add("active"));
-
-    // Close mobile sidebar
-    if (window._closeMobileSidebar) window._closeMobileSidebar();
 
     const candidat = allCandidats.find(c => c.id === id);
     if (!candidat) return;
@@ -277,6 +289,7 @@ async function selectCandidat(id, liEl) {
     container.classList.add("hidden");
     document.getElementById("empty-state").classList.add("hidden");
     document.getElementById("loading-overlay").classList.remove("hidden");
+    showBackButton(true);
 
     const standObservations = {};
     try {
@@ -296,7 +309,6 @@ async function selectCandidat(id, liEl) {
     document.getElementById("loading-overlay").classList.add("hidden");
 
     renderBilan(candidat, standObservations);
-    showFab(true);
 
     // Scroll to top on mobile
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -363,6 +375,7 @@ function renderBilan(candidat, standObservations) {
     renderStandsProgress(standObservations);
     renderSuperPouvoirs(currentAverageScores);
     renderComparativeTable(currentScoresCandidat, standObservations, currentAverageScores);
+    renderComparativeCards(currentScoresCandidat, standObservations, currentAverageScores);
     renderRadar(currentAverageScores, currentScoresCandidat);
 }
 
@@ -583,13 +596,13 @@ function renderComparativeTable(scoresCandidat, standObservations, avgScores) {
 
     if (!hasCandidat && !hasStands) {
         tbody.innerHTML = "";
+        const cards = document.getElementById("comp-cards");
+        if (cards) cards.innerHTML = "";
         emptyMsg.classList.remove("hidden");
-        tbody.closest("table").classList.add("hidden");
         return;
     }
 
     emptyMsg.classList.add("hidden");
-    tbody.closest("table").classList.remove("hidden");
     tbody.innerHTML = "";
 
     SAVOIR_ETRE.forEach((skill, idx) => {
@@ -610,6 +623,48 @@ function renderComparativeTable(scoresCandidat, standObservations, avgScores) {
         `;
         tbody.appendChild(tr);
     });
+}
+
+// Mobile : version cards empilées
+function renderComparativeCards(scoresCandidat, standObservations, avgScores) {
+    const container = document.getElementById("comp-cards");
+    if (!container) return;
+
+    const hasCandidat = scoresCandidat && Object.values(scoresCandidat).some(v => v > 0);
+    const hasStands = Object.keys(standObservations).length > 0;
+    if (!hasCandidat && !hasStands) {
+        container.innerHTML = "";
+        return;
+    }
+
+    container.innerHTML = SAVOIR_ETRE.map(skill => {
+        const sc = (scoresCandidat && scoresCandidat[skill]) || 0;
+        const avg = avgScores[skill] || 0;
+        const autoPill = getScorePillHTML(sc);
+        const dots = getStandDotsHTML(skill, standObservations);
+        const boussole = getBoussoleHTML(sc, avg);
+
+        return `
+            <div class="bg-white border border-gray-200 rounded-xl p-3.5 shadow-sm">
+                <p class="font-semibold text-gray-700 text-[13px] mb-3 leading-snug">${skill}</p>
+                <div class="space-y-2.5">
+                    <div class="flex items-center justify-between gap-3">
+                        <span class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider flex-shrink-0">Auto-éval</span>
+                        <div class="text-right">${autoPill || '<span class="text-[11px] text-gray-300">—</span>'}</div>
+                    </div>
+                    <div class="flex items-start justify-between gap-3">
+                        <span class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider flex-shrink-0 pt-1">Terrain</span>
+                        <div class="flex flex-wrap items-center justify-end gap-1.5 min-h-[28px]">${dots || '<span class="text-[11px] text-gray-300">—</span>'}</div>
+                    </div>
+                    ${boussole ? `
+                    <div class="flex items-center justify-between gap-3 pt-2 border-t border-gray-100">
+                        <span class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider flex-shrink-0">Boussole</span>
+                        <div class="text-right">${boussole}</div>
+                    </div>` : ""}
+                </div>
+            </div>
+        `;
+    }).join("");
 }
 
 // ============================================================
