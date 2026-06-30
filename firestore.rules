@@ -1,0 +1,89 @@
+rules_version = '2';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SoftSkill Observer — règles Firestore
+//
+// Approche RGPD :
+//   1. Date d'expiration globale (filet de sécurité, à prolonger chaque année).
+//   2. Validation stricte de chaque document : champs autorisés, types et tailles
+//      maximales — limite les abus (injection de gros blobs, données indésirables).
+//   3. Limite la lecture aux collections nécessaires, bloque tout le reste.
+//
+// Limites de ces règles :
+//   - Pas d'authentification utilisateur, donc n'importe qui possédant
+//     l'URL Firestore peut lire/écrire (dans le respect des contraintes ci-dessus).
+//   - Pour un évènement public et éphémère (salon), c'est un compromis acceptable
+//     à condition de :
+//       a) Purger toutes les données candidats après l'évènement (droit à l'oubli).
+//       b) Informer les candidats du traitement (déjà via rgpd_consent_date).
+//       c) Restreindre la durée de conservation (cf. EXPIRES_AT ci-dessous).
+//
+// Renforcement futur (recommandé) :
+//   - Activer Firebase Auth anonyme dans toutes les pages (candidat.js,
+//     facilitateur.js, recruteur.js, admin.js) puis remplacer `notExpired()`
+//     par `request.auth != null && notExpired()` partout — protège contre les
+//     scripts externes anonymes.
+// ─────────────────────────────────────────────────────────────────────────────
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Filet de sécurité temporel : à prolonger d'un évènement à l'autre ──
+    function notExpired() {
+      return request.time < timestamp.date(2027, 12, 31);
+    }
+
+    // ── Validation d'un document candidat ─────────────────────────────────
+    // Champs autorisés (whitelist stricte : tout champ inconnu = refus)
+    function candidatFieldsAllowed(data) {
+      return data.keys().hasOnly([
+        'nom', 'prenom', 'email', 'telephone',
+        'profil_psy', 'personality_link', 'notes',
+        'scores_animateur', 'scores_candidat',
+        'rgpd_consent', 'rgpd_consent_date',
+        'dateInscription', 'dateAutoEvaluation',
+        'dateDerniereObservation'
+      ]);
+    }
+
+    function candidatValid(data) {
+      return candidatFieldsAllowed(data)
+        && data.nom is string    && data.nom.size()    > 0 && data.nom.size()    <= 100
+        && data.prenom is string && data.prenom.size() > 0 && data.prenom.size() <= 100
+        && (!('email' in data)        || (data.email is string        && data.email.size()        <= 200))
+        && (!('telephone' in data)    || (data.telephone is string    && data.telephone.size()    <= 30))
+        && (!('profil_psy' in data)   || (data.profil_psy is string   && data.profil_psy.size()   <= 10))
+        && (!('personality_link' in data) || (data.personality_link is string && data.personality_link.size() <= 500))
+        && (!('notes' in data)        || (data.notes is string        && data.notes.size()        <= 5000));
+    }
+
+    // ── Collection candidats ──────────────────────────────────────────────
+    match /candidats/{candidatId} {
+      allow read:   if notExpired();
+      allow create: if notExpired() && candidatValid(request.resource.data);
+      allow update: if notExpired() && candidatValid(request.resource.data);
+      allow delete: if notExpired();
+
+      // ── Sous-collection observations ────────────────────────────────────
+      match /observations/{observationId} {
+        allow read:   if notExpired();
+        allow create: if notExpired()
+                      && request.resource.data.keys().hasOnly([
+                           'stand_id', 'scores', 'notes',
+                           'dateObservation', 'observateur'
+                         ])
+                      && request.resource.data.stand_id is string
+                      && request.resource.data.stand_id.size() <= 50
+                      && (!('notes' in request.resource.data)
+                          || request.resource.data.notes.size() <= 5000);
+        allow update: if notExpired();
+        allow delete: if notExpired();
+      }
+    }
+
+    // ── Tout le reste est refusé ──────────────────────────────────────────
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
