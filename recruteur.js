@@ -21,10 +21,10 @@ const SCORE_COLORS = {
 };
 
 const STANDS = [
-    { id: "aeronautique-defense", nom: "Aéronautique & Défense", short: "Aéro", emoji: "✈️" },
-    { id: "batiment",             nom: "Bâtiment",               short: "Bât",  emoji: "🏗️" },
-    { id: "audio-visuel",        nom: "Audio-visuel",           short: "AV",   emoji: "🎬" },
-    { id: "restauration",        nom: "Restauration",           short: "Resto", emoji: "🍽️" }
+    { id: "atelier-1", nom: "Atelier 1", short: "Atelier 1", emoji: "1️⃣" },
+    { id: "atelier-2", nom: "Atelier 2", short: "Atelier 2", emoji: "2️⃣" },
+    { id: "atelier-3", nom: "Atelier 3", short: "Atelier 3", emoji: "3️⃣" },
+    { id: "atelier-4", nom: "Atelier 4", short: "Atelier 4", emoji: "4️⃣" }
 ];
 
 // ============================================================
@@ -921,7 +921,7 @@ function generatePDF(candidat, standObservations, scoresCandidat, avgScores) {
         y += 7;
 
         const colX = [M, M + 48, M + 68, M + 88, M + 108, M + 128];
-        const colLabels = ["Savoir-etre", "Auto-eval", "Aero", "Bat", "AV", "Resto", "Boussole"];
+        const colLabels = ["Savoir-etre", "Auto-eval", "At.1", "At.2", "At.3", "At.4", "Boussole"];
         const rowH = 5.5;
 
         pdf.setFillColor(243, 244, 246);
