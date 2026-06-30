@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>QR codes — SoftSkill Observer</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs/qrcode.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
         body { font-family: 'Inter', system-ui, sans-serif; }
@@ -122,18 +122,18 @@
                 const container = document.getElementById("qr-" + page.id);
                 const urlLabel  = document.getElementById("url-" + page.id);
                 container.innerHTML = "";
-                QRCode.toCanvas(fullURL, {
-                    width: 240,
-                    margin: 1,
-                    color: { dark: "#0f172a", light: "#ffffff" },
-                    errorCorrectionLevel: "M"
-                }, (err, canvas) => {
-                    if (err) {
-                        container.innerHTML = `<span class="text-red-500 text-sm">Erreur QR : ${err.message}</span>`;
-                        return;
-                    }
-                    container.appendChild(canvas);
-                });
+                try {
+                    new QRCode(container, {
+                        text: fullURL,
+                        width: 240,
+                        height: 240,
+                        colorDark: "#0f172a",
+                        colorLight: "#ffffff",
+                        correctLevel: QRCode.CorrectLevel.M
+                    });
+                } catch (err) {
+                    container.innerHTML = `<span class="text-red-500 text-sm">Erreur QR : ${err.message}</span>`;
+                }
                 urlLabel.textContent = fullURL;
             });
         }
