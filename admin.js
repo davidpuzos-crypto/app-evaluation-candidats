@@ -1,10 +1,10 @@
 const ADMIN_PWD = "1234";
 
 const STANDS = [
-    { id: "aeronautique-defense", short: "Aéro", emoji: "✈️" },
-    { id: "batiment",             short: "Bât",  emoji: "🏗️" },
-    { id: "audio-visuel",        short: "AV",   emoji: "🎬" },
-    { id: "restauration",        short: "Resto", emoji: "🍽️" }
+    { id: "atelier-1", short: "Atelier 1", emoji: "1️⃣" },
+    { id: "atelier-2", short: "Atelier 2", emoji: "2️⃣" },
+    { id: "atelier-3", short: "Atelier 3", emoji: "3️⃣" },
+    { id: "atelier-4", short: "Atelier 4", emoji: "4️⃣" }
 ];
 
 let allCandidats = [];

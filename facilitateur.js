@@ -21,10 +21,10 @@ const LABELS_QUALITATIFS = ["", "En émergence", "En développement", "Observé"
 const QLABEL_CLASSES = ["text-white/35", "ql-1", "ql-2", "ql-3", "ql-4", "ql-5"];
 
 const STANDS = [
-    { id: "aeronautique-defense", nom: "Aéronautique & Défense", emoji: "✈️" },
-    { id: "batiment",             nom: "Bâtiment",               emoji: "🏗️" },
-    { id: "audio-visuel",        nom: "Audio-visuel",           emoji: "🎬" },
-    { id: "restauration",        nom: "Restauration",           emoji: "🍽️" }
+    { id: "atelier-1", nom: "Atelier 1", emoji: "1️⃣" },
+    { id: "atelier-2", nom: "Atelier 2", emoji: "2️⃣" },
+    { id: "atelier-3", nom: "Atelier 3", emoji: "3️⃣" },
+    { id: "atelier-4", nom: "Atelier 4", emoji: "4️⃣" }
 ];
 
 let scores = {};

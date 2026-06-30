@@ -19,25 +19,25 @@ const LABELS_QUALITATIFS = ["", "En émergence", "En développement", "Observé"
 // ============================================================
 const SECTEURS = [
     {
-        nom: "Aéronautique", emoji: "✈️",
+        nom: "Atelier 1", emoji: "1️⃣",
         description: "Précision, calme sous pression, sens de l'organisation",
         competences: ["Rigueur", "Gestion du stress", "Prise de décision"],
         labels: ["Rigueur", "Gestion du stress", "Sens de l'organisation"]
     },
     {
-        nom: "Restauration", emoji: "🍽️",
+        nom: "Atelier 2", emoji: "2️⃣",
         description: "Réactivité, esprit d'équipe, relation client",
         competences: ["Gestion des conflits", "Travail en équipe", "Communication"],
         labels: ["Réactivité", "Travail en équipe", "Communication"]
     },
     {
-        nom: "Bâtiment", emoji: "🏗️",
+        nom: "Atelier 3", emoji: "3️⃣",
         description: "Endurance, autonomie, adaptation au terrain",
         competences: ["Persévérance", "Autonomie", "Capacité d'adaptation"],
         labels: ["Persévérance", "Autonomie", "Adaptation"]
     },
     {
-        nom: "Audio-visuel", emoji: "🎬",
+        nom: "Atelier 4", emoji: "4️⃣",
         description: "Créativité, curiosité, fédérer une équipe",
         competences: ["Esprit critique", "Créativité", "Leadership"],
         labels: ["Force de proposition", "Curiosité", "Fédérer"]

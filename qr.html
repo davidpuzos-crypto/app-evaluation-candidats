@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR codes — SoftSkill Observer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        body { font-family: 'Inter', system-ui, sans-serif; }
+
+        .qr-card {
+            background: #ffffff;
+            border: 2px dashed #cbd5e1;
+            border-radius: 24px;
+            padding: 32px 28px;
+            text-align: center;
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+        .qr-card canvas, .qr-card img {
+            display: block;
+            margin: 0 auto;
+            max-width: 100%;
+            height: auto;
+        }
+
+        /* Print : 1 QR par page, plein format */
+        @media print {
+            @page { size: A4 portrait; margin: 12mm; }
+            body { background: #ffffff !important; }
+            .no-print { display: none !important; }
+            .qr-card { border: 2px solid #1f2937; page-break-after: always; }
+            .qr-card:last-child { page-break-after: auto; }
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-900 min-h-screen">
+
+    <!-- Toolbar (cachée à l'impression) -->
+    <div class="no-print bg-white border-b border-slate-200 sticky top-0 z-10">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+                <a href="index.html" class="text-slate-500 hover:text-slate-900 transition-colors flex items-center gap-1.5 text-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+                    Retour
+                </a>
+                <span class="text-slate-300">|</span>
+                <h1 class="text-base sm:text-lg font-bold text-slate-900">QR codes des stands</h1>
+            </div>
+            <div class="flex items-center gap-2">
+                <label for="base-url" class="text-xs text-slate-500 hidden sm:block">URL de base :</label>
+                <input id="base-url" type="text" class="text-xs px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white text-slate-700 w-56 sm:w-72 focus:outline-none focus:ring-2 focus:ring-brand-400">
+                <button id="btn-print" class="bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg transition-colors flex items-center gap-1.5">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                    Imprimer
+                </button>
+            </div>
+        </div>
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 pb-3">
+            <p class="text-[11px] text-slate-500 leading-snug">
+                Les QR codes pointent vers l'URL de cette page. Tu peux modifier l'URL de base au-dessus si tu veux pointer vers un autre déploiement.
+                Imprime puis colle sur chaque stand.
+            </p>
+        </div>
+    </div>
+
+    <!-- Cartes QR -->
+    <main class="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+
+        <!-- CANDIDAT -->
+        <div class="qr-card">
+            <div class="inline-block bg-violet-50 text-violet-700 text-[11px] font-bold uppercase tracking-wider px-3 py-1 rounded-full mb-3">
+                Stand inscription
+            </div>
+            <h2 class="text-2xl font-extrabold text-slate-900 mb-1">Candidat</h2>
+            <p class="text-xs text-slate-500 mb-5 leading-snug">Je m'inscris et je m'auto-évalue</p>
+            <div id="qr-candidat" class="bg-white p-2 rounded-xl inline-block"></div>
+            <p id="url-candidat" class="text-[10px] text-slate-400 mt-3 break-all font-mono"></p>
+        </div>
+
+        <!-- FACILITATEUR -->
+        <div class="qr-card">
+            <div class="inline-block bg-emerald-50 text-emerald-700 text-[11px] font-bold uppercase tracking-wider px-3 py-1 rounded-full mb-3">
+                Animateur d'atelier
+            </div>
+            <h2 class="text-2xl font-extrabold text-slate-900 mb-1">Facilitateur</h2>
+            <p class="text-xs text-slate-500 mb-5 leading-snug">J'observe et j'évalue les candidats</p>
+            <div id="qr-facilitateur" class="bg-white p-2 rounded-xl inline-block"></div>
+            <p id="url-facilitateur" class="text-[10px] text-slate-400 mt-3 break-all font-mono"></p>
+        </div>
+
+        <!-- RECRUTEUR -->
+        <div class="qr-card">
+            <div class="inline-block bg-amber-50 text-amber-700 text-[11px] font-bold uppercase tracking-wider px-3 py-1 rounded-full mb-3">
+                Espace entreprise
+            </div>
+            <h2 class="text-2xl font-extrabold text-slate-900 mb-1">Recruteur</h2>
+            <p class="text-xs text-slate-500 mb-5 leading-snug">Je consulte les profils des candidats</p>
+            <div id="qr-recruteur" class="bg-white p-2 rounded-xl inline-block"></div>
+            <p id="url-recruteur" class="text-[10px] text-slate-400 mt-3 break-all font-mono"></p>
+        </div>
+
+    </main>
+
+    <script>
+        const PAGES = [
+            { id: "candidat",     file: "candidat.html" },
+            { id: "facilitateur", file: "facilitateur.html" },
+            { id: "recruteur",    file: "recruteur.html" }
+        ];
+
+        function getBaseURL() {
+            const here = window.location.href;
+            return here.substring(0, here.lastIndexOf("/") + 1);
+        }
+
+        function renderQRCodes(baseURL) {
+            PAGES.forEach(page => {
+                const fullURL = baseURL + page.file;
+                const container = document.getElementById("qr-" + page.id);
+                const urlLabel  = document.getElementById("url-" + page.id);
+                container.innerHTML = "";
+                QRCode.toCanvas(fullURL, {
+                    width: 240,
+                    margin: 1,
+                    color: { dark: "#0f172a", light: "#ffffff" },
+                    errorCorrectionLevel: "M"
+                }, (err, canvas) => {
+                    if (err) {
+                        container.innerHTML = `<span class="text-red-500 text-sm">Erreur QR : ${err.message}</span>`;
+                        return;
+                    }
+                    container.appendChild(canvas);
+                });
+                urlLabel.textContent = fullURL;
+            });
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const input = document.getElementById("base-url");
+            const initialURL = getBaseURL();
+            input.value = initialURL;
+            renderQRCodes(initialURL);
+
+            let debounce;
+            input.addEventListener("input", () => {
+                clearTimeout(debounce);
+                debounce = setTimeout(() => {
+                    let url = input.value.trim();
+                    if (!url) return;
+                    if (!url.endsWith("/")) url += "/";
+                    renderQRCodes(url);
+                }, 300);
+            });
+
+            document.getElementById("btn-print").addEventListener("click", () => {
+                window.print();
+            });
+        });
+    </script>
+
+</body>
+</html>
